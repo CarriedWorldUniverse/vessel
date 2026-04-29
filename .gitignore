@@ -1,0 +1,45 @@
+# Build outputs
+/target
+/dist
+/build
+/out
+
+# Node
+/node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Tauri
+/src-tauri/target
+/src-tauri/Cargo.lock
+
+# Vessel runtime artifacts
+*.db
+*.db-wal
+*.db-shm
+/cache
+/portraits-cache
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.cursor/
+
+# Credentials / config
+.env
+.env.local
+*.credentials.json
+vessel.config.local.yaml
+
+# Sample/test models (operator commits chosen placeholder VRMs explicitly)
+/test-models/*.vrm
+!/test-models/.gitkeep
