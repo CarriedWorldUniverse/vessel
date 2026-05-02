@@ -10,7 +10,7 @@ This revision integrates conversation-driven decisions from 2026-05-02. Sections
 
 Key shifts:
 
-- **Vessel ships as a container hosting services + SDKs + bundled UI manifests, plus a thin native shell window for the transparent overlay.** Container packaging precise meaning (OCI vs self-contained bundle) is open pending an audio-passthrough spike.
+- **Vessel is architected as a two-tier process model: a self-contained engine process hosting services + SDKs + bundled UI manifests, and a thin native shell window for the transparent overlay.** Throughout this spec, "container" refers to the engine *as a product concept* (a self-contained process that holds the runtime), not to OCI/Docker as a packaging mechanism. **Beta builds run engine and shell as normal local-dev processes**; release-time distribution packaging (OCI image vs self-contained sidecar bundle) is a separate decision pending the audio-passthrough spike.
 - **One SDK, not two.** ChatSource extends to carry UI manifests as another payload type — there is no separate Interface SDK. Aspects (or other AIs) author UI manifests; vessel's runtime renders them in a constrained component vocabulary.
 - **ChatSource transport is bidirectional and push-capable (WebSocket or SSE-with-uplink). Not MCP.** MCP is pull-shaped and cannot wake an agent with a new turn; ChatSource needs push on both sides for the wake direction. MCP remains optional for vessel's *capability surface* (mic/speaker/avatar control as tools).
 - **Build chains-first, integrate UI second.** Input chain CLI, output chain CLI, ChatSource glue CLI all run before the Tauri/VRM integration step.
@@ -25,7 +25,11 @@ Vessel is a desktop product that gives an LLM a face and a voice. The user speak
 
 It is a **standalone product**, designed as bring-your-own-backend: any OpenAI-compatible endpoint, Anthropic Claude API, a Nexus broker (the reference network this product was originally designed alongside), or community-built adapters built against the Vessel SDK.
 
-**Distribution shape (v0.2):** vessel ships as a **container** hosting the services (STT, TTS, lipsync), the ChatSource SDK runtime, the Interface manifest renderer, and bundled default UIs (avatar shell, chat-only, harness-tuned variants). A **thin native shell** hosts a transparent always-on-top window pointing at the container's localhost UI endpoint. The container is the engine; the shell is the visual boundary. The word "container" is currently load-bearing and ambiguous — see §14 open question #6 for the OCI-vs-self-contained-bundle decision (gated on audio-passthrough feasibility on Win/Mac Docker).
+**Architectural shape (v0.2):** vessel is structured as two tiers — an **engine** process hosting the services (STT, TTS, lipsync), the ChatSource SDK runtime, the Interface manifest renderer, and bundled default UIs (avatar shell, chat-only, harness-tuned variants); and a **thin native shell** hosting a transparent always-on-top window pointing at the engine's localhost UI endpoint. The engine is the runtime; the shell is the visual boundary. They communicate over local IPC (§4.6).
+
+**On the word "container."** Where this spec uses "container," it refers to the engine *as a product concept* — a self-contained process holding the runtime — not to OCI/Docker images as a distribution mechanism. The two-tier process model is the architecture and applies regardless of how the binaries are eventually packaged.
+
+**Distribution packaging is a separate, later decision.** Beta builds run the engine and shell as normal local-dev processes (cargo / pnpm tauri dev), the same way any two-process desktop app would. Release-time packaging — whether to ship the engine as an OCI image, as a self-contained sidecar bundle inside the Tauri app, or both — is gated on the Phase 0 audio-passthrough spike (§14 open question #6, §21). That spike's outcome shapes release distribution; it does not gate beta development or change the process-model split.
 
 **The UI is programmable.** The bundled avatar overlay is one default among several. Aspects (or other AIs) can author their own UI by emitting a manifest over ChatSource (§5.1); vessel renders it in a constrained component vocabulary with a declared capability scope. Common harnesses (Claude Code, Cursor) get pre-tuned default UIs alongside the avatar.
 
@@ -46,7 +50,7 @@ These are not open questions in this spec:
 1. **Native build, not fork.** No Python runtime dependency. No fork-tracking debt against an upstream avatar library.
 2. **VRM model format.** Open standard, no licence tax for individual / small-scale use, standardized blendshapes / bones / expressions. Users bring their own; the build bundles CC0 placeholders for development.
 3. **Three.js + @pixiv/three-vrm rendering.** Web-tech consistent with the build's frontend. Unity reserved for a possible later swap if animation richness becomes a differentiator.
-4. **Tauri v2 thin shell over container engine.** Tauri v2 hosts the transparent always-on-top window and routes audio I/O between OS and container. The container holds services + SDK + manifest renderer. Smaller binaries than Electron (~5MB vs ~80MB), native APIs for transparent overlay. **Container packaging shape is open** (OCI vs self-contained bundle) pending the §14 audio-passthrough spike.
+4. **Tauri v2 thin shell + engine process — two-tier architecture.** Tauri v2 hosts the transparent always-on-top window and routes audio I/O between OS and engine. The engine holds services + SDK + manifest renderer. Smaller binaries than Electron (~5MB vs ~80MB), native APIs for transparent overlay. The two-tier process split is **locked** as the architecture; beta runs the two as ordinary local processes. **Release-time distribution packaging is open** (OCI image, self-contained sidecar bundle, or both) — see §14 open question #6 and §21. That decision shapes release builds; it does not change the process model.
 5. **whisper.cpp via Rust backend (`whisper-rs`) as the cross-platform STT default. STT engine is pluggable.** No node-gyp surface; native code stays in Rust where it belongs. The runtime exposes an `STTEngine` trait so per-platform accelerators (WhisperKit on macOS, ONNX+DirectML on Windows) can drop in as Phase 6+ optimisations without changing the chain. **A cleanup-LLM pass follows STT** in the input chain (Claude Haiku or local small model) and is the felt-quality moat — see §12.
 6. **SDK-first with reference adapters.** `ChatSource` interface in `@nexus-cw/vessel-sdk`. Reference adapters bundled at v1: `NexusAdapter`, `OpenAIAdapter` (OpenAI-compatible API shape — covers OpenAI, Ollama, LM Studio, llama.cpp server, vLLM, Together, Groq, OpenRouter, Mistral, DeepSeek, and most local LLM tooling), `AnthropicAdapter` (Anthropic Claude API + emulators).
 7. **Single-user at v1.** Vessel-the-binary supports a single user / single config. Multi-tenant deployments are downstream consumer concerns, not v1 scope.
@@ -640,15 +644,18 @@ Rationale: chains are where the *unknowns* live (STT quality, TTS+lipsync timing
 
 ### Phase 0 — Architecture spikes (decision unblockers)
 
-**Goal:** Resolve the two open architectural decisions that gate the rest of the build. Throwaway code; outputs are decisions, not artifacts.
+**Goal:** Resolve open decisions. Throwaway code; outputs are decisions, not artifacts.
 
-**Spike 0.1 — Container packaging.** Test whether OCI/Docker is viable as the engine package on Win/Mac/Linux:
+**Scope note.** Neither Phase 0 spike gates beta development. Beta builds run engine + shell as ordinary local-dev processes; the chains and SDK can be built and validated end-to-end without resolving either spike. Spike 0.1 informs *release-time distribution packaging*; Spike 0.2 informs *platform support* for the transparent overlay. Both can run in parallel with Phases 1–3.
+
+**Spike 0.1 — Release distribution packaging (OCI viability).** Tests whether OCI/Docker is a viable *release distribution* shape for the engine on Win/Mac/Linux. This is not a question about whether the engine and shell are separate processes (they are, in any packaging) — it is a question about whether end users can run a Dockerised engine without unacceptable audio friction.
 
 - Build a minimal engine image (Alpine + a Rust binary that captures mic and plays speakers).
 - Test mic capture across the container boundary: Linux (PulseAudio/PipeWire socket mount), macOS (Docker Desktop — known to be problematic), Windows (Docker Desktop with WSL2 backend, also problematic).
 - Measure: does mic capture work at all? Latency? Sample rate stable?
 - Same for speaker playback.
-- Decision criterion: if Mac or Windows mic capture fails or has >100ms latency or requires user-side daemon installation, OCI is out and self-contained sidecar bundle is the choice.
+- Decision criterion: if Mac or Windows mic capture fails or has >100ms latency or requires user-side daemon installation, OCI is out as a primary release shape and the self-contained sidecar bundle (§21.1) is the release default. OCI may still ship as a secondary path for self-hosted / advanced users.
+- **Not a beta gate.** Beta runs the engine as a local subprocess regardless of this spike's outcome.
 
 **Spike 0.2 — Tauri v2 transparent always-on-top on macOS and Linux.** Confirm the v0.1 §14.1 open question:
 
@@ -891,7 +898,7 @@ These need resolution before the corresponding phase starts.
 3. ~~`whisper-rs` audio chunking.~~ **Resolved:** Push-to-talk batches a complete WAV on key-release; no streaming adapter needed at v1.
 4. **Voice perceptual confirmation.** The configured voices for each recipient should be heard during v0.2 Phase 2 and confirmed before being baked into config defaults.
 5. ~~Default VRM portrait lighting.~~ **Resolved:** Three-point setup specified in §11 Phase 5 (was v0.1 Phase 4).
-6. **Container packaging — OCI vs self-contained bundle.** Audio device passthrough on Win/Mac Docker is the deciding constraint. Phase 0 Spike 0.1 resolves this.
+6. **Release distribution packaging — OCI vs self-contained bundle.** *Release packaging only* — not a question about the engine/shell process split, which is locked (§3 #4). Audio device passthrough on Win/Mac Docker is the deciding constraint. Phase 0 Spike 0.1 resolves this; beta development proceeds on a local-process engine in parallel and is unaffected by the outcome.
 7. **UI manifest vocabulary package — `@nexus-cw/vessel-sdk` or `@nexus-cw/vessel-ui-vocab`?** Couples to SDK lifecycle vs independent versioning. Resolution before Phase 3 ships UI emission.
 8. **Manifest capability gating UX — first-render approval flow.** Per-aspect sticky approvals (passkey-style)? Per-session like browser permissions? Hybrid? Resolution before Phase 5 wires manifest rendering.
 9. **Cleanup-LLM provider when offline.** Claude Haiku requires net. Local fallback model (Llama 3.x small / Phi-mini) feasibility — does the quality bar hold without the cloud LLM? Resolution during Phase 1.
@@ -1031,9 +1038,11 @@ The shell exposes a small status surface (system tray icon + click-through to a 
 
 This surface is the operator's ground-truth for "what's vessel doing." No mystery states.
 
-## 21. Container packaging detail
+## 21. Release distribution packaging detail
 
-Two candidate forms (Phase 0 Spike 0.1 decides):
+**Scope.** This section covers *release-time distribution packaging* of the engine — how the binaries reach end users. It does **not** describe the engine/shell process model (that's §4) and it does **not** apply to beta builds, which run the engine as a normal local-dev subprocess. Phase 0 Spike 0.1 selects between the two release-distribution forms below.
+
+Two candidate release forms (Phase 0 Spike 0.1 decides):
 
 ### 21.1 Self-contained sidecar bundle (likely default)
 
