@@ -175,21 +175,25 @@ backend response text
 
 Panel appears when content length exceeds 200 chars (same threshold as current `panelContent` logic). Panel content is always the **full** `content`, never the summary.
 
-### Connector protocol field
+### Connector protocol fields
 
-`connector.chat.deliver` carries an optional `speech` field (v1 protocol, optional/unused in v1):
+The split is decided at the backend, not in vessel. The response frame arrives pre-divided:
 
 ```typescript
 interface AspectMessage {
-  content: string;   // full text — right panel + visual record
-  speech?: string;   // aspect-provided spoken form — TTS uses if present (v2+ usage)
+  display: string;   // full content — right panel, visual record, scrollback
+  speech?: string;   // spoken form — TTS. Aspect provides this; vessel uses verbatim.
   // ...
 }
 ```
 
-**v1 behaviour:** vessel ignores `speech` and applies the heuristic. Field is defined in the protocol now so aspects can start filling it in v2 without a breaking change.
+**When `speech` is present:** vessel speaks it, shows `display` in panel. No processing inside vessel.
 
-**v2+ behaviour:** when `speech` is present, vessel speaks it verbatim. Aspects opt into providing it via their own prompt/instructions — no protocol or broker changes needed beyond the broker preserving the field through fanout (it does this already, it's just a payload field).
+**When `speech` is absent (fallback):** vessel applies the length heuristic — ≤200 chars speak `display` in full, >200 chars speak the first sentence + "...see the panel for details."
+
+The fallback exists for connectors and backends that don't provide `speech`. The primary model is backend-decided split: the aspect writes a natural spoken sentence and a complete response independently, then sends both. Vessel is just a router.
+
+**Aspect authoring:** aspects learn to provide `speech` via their SOUL/instructions. No protocol changes needed — broker preserves the field through fanout unchanged.
 
 ---
 
