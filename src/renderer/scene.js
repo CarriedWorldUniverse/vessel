@@ -1,6 +1,7 @@
 import * as THREE from '../../node_modules/three/build/three.module.js';
 import { ASPECTS } from './aspects.js';
 import { stageState, onStateChange } from './state.js';
+import { updateCamera, initCamera } from './camera.js';
 
 // ── Renderer ──────────────────────────────────────────────────────────────────
 
@@ -238,10 +239,13 @@ function animate() {
     updateSphereState(s, dt);
   });
 
+  updateCamera();
   renderer.render(scene, camera);
 }
 
+// Wire camera rig after spheres are created
+initCamera(camera, spheres);
+
 animate();
 
-// Export camera + scene for the camera rig (Part 3)
 export { scene, camera, renderer, spheres, seatPosition };
