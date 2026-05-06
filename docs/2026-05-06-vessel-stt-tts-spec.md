@@ -175,24 +175,21 @@ backend response text
 
 Panel appears when content length exceeds 200 chars (same threshold as current `panelContent` logic). Panel content is always the **full** `content`, never the summary.
 
-### Connector spec amendment
+### Connector protocol field
 
-The `connector.chat.deliver` frame gains an optional `speech_text` field:
+`connector.chat.deliver` carries an optional `speech` field (v1 protocol, optional/unused in v1):
 
-```json
-{
-  "kind": "connector.chat.deliver",
-  "payload": {
-    "from": "forge",
-    "content": "The full detailed response...",
-    "speech_text": "A short spoken version.",   // optional
-    "message_id": "...",
-    "done": true
-  }
+```typescript
+interface AspectMessage {
+  content: string;   // full text — right panel + visual record
+  speech?: string;   // aspect-provided spoken form — TTS uses if present (v2+ usage)
+  // ...
 }
 ```
 
-When `speech_text` is absent, vessel applies the heuristic. Connectors are not required to provide it.
+**v1 behaviour:** vessel ignores `speech` and applies the heuristic. Field is defined in the protocol now so aspects can start filling it in v2 without a breaking change.
+
+**v2+ behaviour:** when `speech` is present, vessel speaks it verbatim. Aspects opt into providing it via their own prompt/instructions — no protocol or broker changes needed beyond the broker preserving the field through fanout (it does this already, it's just a payload field).
 
 ---
 
