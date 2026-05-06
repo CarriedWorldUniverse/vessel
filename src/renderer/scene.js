@@ -2,6 +2,7 @@ import * as THREE from '../../node_modules/three/build/three.module.js';
 import { ASPECTS } from './aspects.js';
 import { stageState, onStateChange } from './state.js';
 import { updateCamera, initCamera } from './camera.js';
+import { updateGaze, initGaze } from './gaze.js';
 
 // ── Renderer ──────────────────────────────────────────────────────────────────
 
@@ -240,11 +241,13 @@ function animate() {
   });
 
   updateCamera();
+  updateGaze(dt);
   renderer.render(scene, camera);
 }
 
-// Wire camera rig after spheres are created
+// Wire camera rig and gaze system after spheres are created
 initCamera(camera, spheres);
+initGaze(spheres, camera);
 
 animate();
 

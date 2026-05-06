@@ -17,6 +17,10 @@ export const stageState = {
   // Which aspect is currently speaking (null = nobody)
   activeSpeaker: 'anvil',
 
+  // Which aspect the active speaker is addressing (null = operator/general)
+  // Derived from message metadata by the connector layer
+  addressingAspectId: null,
+
   // Right panel content for the active speaker
   panelContent: null,
 };
