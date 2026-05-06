@@ -1,8 +1,7 @@
-# Vessel Connector Spec v0.1
+# Vessel Connector SDK Spec v0.1
 
 **Date:** 2026-05-06  
-**Status:** Draft  
-**Repo:** `nexus-cw/vessel`
+**Status:** Draft — superseded at protocol level by [`agent-network/docs/2026-05-06-vessel-connector-spec.md`](https://github.com/nexus-cw/nexus/blob/main/docs/2026-05-06-vessel-connector-spec.md) (keel, 2026-05-06). This document covers the **vessel-side TypeScript SDK** that wraps that protocol — the `VesselConnector` interface vessel builds against.
 
 ---
 
