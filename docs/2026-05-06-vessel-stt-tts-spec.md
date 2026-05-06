@@ -58,7 +58,7 @@ A fast cheap model pass after STT, before sending to the backend:
 - Adds punctuation
 - Normalises "hey forge," addressing to clean `@forge:` prefix
 
-Claude Haiku is the default when an Anthropic API key is configured. A local small model (e.g. gemma4 via the same local inference stack) is the alternative. Off by default — operator opts in.
+**Default: gemma4 local** — same model already used for knowledge classification (#9781). Cheap, local, no external dependency. Cleanup is well within its wheelhouse. Off by default — operator opts in. Configurable upgrade to Claude Haiku for operators who want higher cleanup quality on edge cases (specific dialects, heavy technical vocabulary) — same pluggable-engine pattern as STT/TTS.
 
 ---
 
