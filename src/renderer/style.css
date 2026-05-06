@@ -1,0 +1,82 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  font-family: system-ui, sans-serif;
+  color: #e8e8f0;
+}
+
+#stage {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ── Right panel ── */
+.overlay-panel {
+  position: fixed;
+  top: 60px;
+  right: 20px;
+  width: 380px;
+  max-height: calc(100vh - 160px);
+  background: rgba(10, 10, 18, 0.88);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  overflow-y: auto;
+  padding: 20px;
+  font-size: 13px;
+  line-height: 1.6;
+  transition: opacity 0.25s, transform 0.25s;
+  pointer-events: auto;
+}
+
+.overlay-panel.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(20px);
+}
+
+#right-panel-content pre {
+  background: rgba(255,255,255,0.05);
+  border-radius: 6px;
+  padding: 10px 14px;
+  overflow-x: auto;
+  font-size: 12px;
+}
+
+/* ── Input bar ── */
+.overlay-bar {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(720px, calc(100vw - 40px));
+  background: rgba(10, 10, 18, 0.92);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 12px 18px;
+  pointer-events: auto;
+}
+
+#input-field {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #e8e8f0;
+  font-size: 14px;
+  font-family: inherit;
+  resize: none;
+  line-height: 1.5;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+#input-field::placeholder { color: rgba(232,232,240,0.35); }
