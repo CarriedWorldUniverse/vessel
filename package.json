@@ -1,0 +1,17 @@
+{
+  "name": "vessel",
+  "version": "0.1.0",
+  "description": "A desktop overlay that gives your LLM aspects a face and a voice",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev"
+  },
+  "dependencies": {
+    "three": "^0.176.0"
+  },
+  "devDependencies": {
+    "electron": "^42.0.0"
+  },
+  "license": "MIT"
+}

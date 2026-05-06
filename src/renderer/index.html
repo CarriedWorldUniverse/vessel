@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vessel</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="stage"></canvas>
+
+  <!-- HTML overlays (right panel, input bar) rendered on top of canvas -->
+  <div id="right-panel" class="overlay-panel hidden">
+    <div id="right-panel-content"></div>
+  </div>
+
+  <div id="input-bar" class="overlay-bar">
+    <textarea id="input-field" placeholder="Speak to your aspects…" rows="1"></textarea>
+  </div>
+
+  <script type="module" src="scene.js"></script>
+  <script type="module" src="overlay.js"></script>
+  <script type="module" src="hittest.js"></script>
+</body>
+</html>
