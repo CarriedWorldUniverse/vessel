@@ -71,13 +71,15 @@ Claude Haiku is the default when an Anthropic API key is configured. A local sma
 | 0 | Web Speech API `SpeechSynthesis` | Robotic | Limited | No phonemes | Free | None |
 | 1 | `edge-tts` | Good | ~300 voices | No phonemes | Free | npm |
 | 2 | Piper (local) | Good | One model per aspect | Phoneme output | Free | binary sidecar |
+| 3 | Inworld TTS | Excellent | 271+ voices, voice cloning | Timestamp stream | Paid ($35/1M chars) | API key |
 | 3 | ElevenLabs | Excellent | Cloned voice per aspect | Phoneme stream | Paid | API key |
 
 **v1 default: Tier 1 (`edge-tts`).** High quality, npm install, no sidecar, no API key. ~300 Microsoft Neural voices — enough for distinct per-aspect voices. Downside: sends response text to Microsoft Cognitive Services; no offline mode.
 
 **Recommended upgrade path:**
 - **Privacy/offline:** Tier 2 (Piper) — runs entirely locally, per-aspect voice models (~50MB each). Also enables proper VRM lipsync via phoneme output.
-- **Maximum expressiveness:** Tier 3 (ElevenLabs) — best voice quality, voice cloning so the operator can pick/create a voice per aspect from any sample. Phoneme streaming for lipsync.
+- **Cloud quality:** Tier 3 (Inworld TTS) — 271+ voices, voice cloning, sub-200ms median latency, OpenAI-compatible API shape, streaming NDJSON audio. Free tier: 40 min/month. Node.js HTTP client, no SDK needed. **Probe script at `tmp/inworld-tts-probe.js`** — run with `INWORLD_API_KEY=<key>` to validate latency and audio quality against `edge-tts` before deciding.
+- **Maximum expressiveness:** Tier 3 (ElevenLabs) — best voice quality, voice cloning, phoneme streaming for lipsync.
 
 **Voice tier ladder mirrors the avatar tier ladder:**
 
@@ -85,7 +87,7 @@ Claude Haiku is the default when an Anthropic API key is configured. A local sma
 |---|---|
 | Sphere (default) | Web Speech API or edge-tts |
 | Portrait / icon | Piper (distinct per-aspect voice) |
-| VRM | ElevenLabs cloned voice + phoneme lipsync |
+| VRM | Inworld / ElevenLabs cloned voice + lipsync |
 
 Same philosophy: every aspect always has *something*. Voice enriches as the operator invests.
 
@@ -148,7 +150,53 @@ Vessel resolves voice config to the active TTS engine. If the configured voice t
 
 ---
 
-## 6. Audio I/O
+## 6. Voice Summary + Panel Split
+
+TTS speaks a **summary** of the response. The full content appears in the right panel simultaneously. This keeps spoken output short and ambient while the panel carries complete detail.
+
+```
+backend response text
+        │
+        ├─→ [voice summary]  → TTS → speaker
+        └─→ [full content]   → right panel
+```
+
+### Summary generation (priority order)
+
+1. **Connector-provided `speech_text` field** (preferred): the connector includes an explicit spoken version in the message. The aspect generates this itself — it has context to summarise well. Vessel speaks `speech_text`; panel shows `content`.
+
+2. **Heuristic fallback** (v1 default): if no `speech_text` is provided:
+   - Content ≤ 200 chars → speak the whole thing
+   - Content > 200 chars → speak the first sentence, then add "...see the panel for details"
+
+3. **Local summariser pass** (optional, future): vessel runs a fast model pass to generate a spoken summary. Adds latency; only worth it if heuristic results are poor in practice.
+
+### Right panel trigger
+
+Panel appears when content length exceeds 200 chars (same threshold as current `panelContent` logic). Panel content is always the **full** `content`, never the summary.
+
+### Connector spec amendment
+
+The `connector.chat.deliver` frame gains an optional `speech_text` field:
+
+```json
+{
+  "kind": "connector.chat.deliver",
+  "payload": {
+    "from": "forge",
+    "content": "The full detailed response...",
+    "speech_text": "A short spoken version.",   // optional
+    "message_id": "...",
+    "done": true
+  }
+}
+```
+
+When `speech_text` is absent, vessel applies the heuristic. Connectors are not required to provide it.
+
+---
+
+## 7. Audio I/O
 
 - **Mic capture:** Web Audio API `getUserMedia` in the Electron renderer. Audio chunks passed to the active STT engine.
 - **Speaker playback:** Web Audio API `AudioContext`. TTS audio chunks decoded and queued for playback. Per-aspect audio is serialised (one aspect speaks at a time); a new speaking turn cancels any in-progress playback from another aspect.
