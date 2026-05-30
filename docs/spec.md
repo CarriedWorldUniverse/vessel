@@ -1,8 +1,14 @@
 # Vessel — Product Spec v0.2
 
-**Date:** 2026-05-02 (v0.2 amendments) — original v0.1 dated 2026-04-29
+**Date:** 2026-05-30 (v0.2.1 TTS amendment) — v0.2 amendments dated 2026-05-02, original v0.1 dated 2026-04-29
 **Status:** Draft
 **Repo:** `nexus-cw/vessel`
+
+## v0.2.1 changes (summary)
+
+Adds **Kokoro-82M** as a first-class **local, high-quality TTS engine** alongside Edge TTS (cloud) and Piper (local-basic). Sections changed: §13 (TTS pipeline — three-engine model + Kokoro rationale), §13.1 (selection logic), §13.2 (licensing — Kokoro is the clean-licensed commercial default candidate), §10.1 (config `tts.engine` values), §14 #11 (open question now has a leading resolution), §21.3 (bundle contents).
+
+Rationale: Kokoro-82M topped the TTS Arena leaderboard (Jan 2026, ahead of XTTS-v2), is **Apache-2.0** (clean for commercial distribution — directly addresses open question #11), is ~82M params / ~300MB, runs faster-than-real-time even on CPU, and exports to **ONNX** so it runs inside the Rust engine via the `ort` (onnxruntime) crate with **no Python runtime dependency** (honours §3 lock #1). Preset voices only — no cloning — which matches vessel's per-recipient-voice model.
 
 ## v0.2 changes (summary)
 
@@ -505,8 +511,8 @@ stt:
     offline_fallback: "local-phi"  # used if cleanup provider unreachable; "off" = no cleanup offline
 
 tts:
-  engine: "edge-tts"
-  fallback_engine: "piper"
+  engine: "edge-tts"        # "edge-tts" (cloud) | "kokoro" (local, high-quality) | "piper" (local, basic)
+  fallback_engine: "kokoro" # commercial-build recommendation: engine: "kokoro", fallback_engine: "piper" (fully local, clean licence)
   voice_default: "en-US-DavisNeural"
 
 queue:
@@ -853,22 +859,28 @@ This is the differentiator vs. tools like Glaido — Glaido's moat is the cleanu
 
 ## 13. TTS pipeline
 
-**Primary: Edge TTS** via Node websocket reimplementation. MS Cognitive Services Edge TTS is free, fast, ~30+ English voices with personality variation. Reimplemented in Node from the Python `edge-tts` library reference (~200 LOC). Token-rotation behaviour (Python `edge-tts` refreshes tokens per-session) is an assumption to validate at spike time.
+Vessel supports **three TTS engines** spanning a cloud-quality / local-quality / local-basic spectrum. Per-deployment, one is `engine` (primary) and one is `fallback_engine`; the selection logic in §13.1 governs runtime choice.
 
-**Fallback: Piper.** Local TTS, no internet dependency. Slightly worse quality than Edge TTS but fully offline. Runs as engine subprocess.
+**Edge TTS (cloud).** MS Cognitive Services Edge TTS is free, fast, ~30+ English voices with personality variation, via a Node websocket reimplementation from the Python `edge-tts` library reference (~200 LOC). Token-rotation behaviour (Python `edge-tts` refreshes tokens per-session) is an assumption to validate at spike time. **Highest voice variety, but a commercial-licensing grey area** (§13.2) and requires network.
 
-Per-recipient voice = config field. Voice IDs (e.g. `en-GB-RyanNeural`, `en-US-DavisNeural`) drawn from the Edge TTS catalogue; users map per recipient to fit personality.
+**Kokoro-82M (local, high-quality).** Open-weight 82M-parameter TTS model (~300MB), **Apache-2.0** licensed. Topped the TTS Arena leaderboard in Jan 2026, ahead of XTTS-v2, at a fraction of the size. Runs **faster than real-time even on CPU** (well above real-time on any GPU), so it comfortably fits the §18 per-sentence TTS budget on both the high-end (RTX-class) and modest (laptop CPU / Apple Silicon) targets. Ships as **ONNX** and runs inside the engine via the `ort` (onnxruntime) crate — **no Python runtime dependency**, honouring §3 lock #1 (the Python `kokoro` reference impl is *not* used at runtime). Preset named voices only (no cloning); curated into the §13.3 catalog. This is the recommended **local default for commercial builds** — it gives near-Edge-TTS quality with a clean licence (§13.2).
+
+**Piper (local, basic).** Lightweight local TTS, no internet dependency, smallest footprint. Lower quality than Kokoro or Edge TTS but extremely cheap and battle-tested. Retained as the **minimal offline fallback** and for the most constrained hardware. Runs as engine subprocess.
+
+Per-recipient voice = config field. Voice IDs are drawn from the configured engine's catalogue (e.g. `en-GB-RyanNeural` / `en-US-DavisNeural` for Edge TTS; Kokoro's named voices such as `af_*` / `am_*` / `bf_*` / `bm_*`); users map per recipient to fit personality. Vessel's curated catalog (§13.3) maps a friendly display name onto the right per-engine ID so switching engines doesn't strand recipient config.
 
 ### 13.1 TTS engine selection logic
 
-Decision tree, executed per sentence:
+Decision tree, executed per sentence. The configured `engine` is the primary and `fallback_engine` is the backstop; the rules degrade from cloud → local-high-quality → local-basic:
 
-1. If user is offline → Piper.
-2. If primary (`edge-tts`) is configured and reachable → Edge TTS.
-3. If Edge TTS errors or rate-limits → fall back to Piper for *this sentence only* (don't poison subsequent sentences); log the fallback for telemetry / status indicator.
-4. If Piper is also unavailable (model file missing, subprocess crash) → engine emits a `tts.unavailable` IPC frame; shell renders text-only response with a "voice unavailable" indicator.
+1. If the primary engine is `edge-tts` and the user is **offline or Edge TTS is unreachable** → use the configured `fallback_engine` (Kokoro if configured, else Piper) for *this sentence only* (don't poison subsequent sentences); log the fallback for telemetry / status indicator.
+2. If the primary engine is configured and available → use it (Edge TTS / Kokoro / Piper as configured).
+3. If the primary engine errors or rate-limits → fall back to `fallback_engine` for *this sentence only*; log the fallback.
+4. If the fallback is **also** unavailable (model file missing, subprocess crash, ONNX load failure) → engine emits a `tts.unavailable` IPC frame; shell renders text-only response with a "voice unavailable" indicator.
 
-Voice cache is keyed by `(text, voice_id, engine_version)`. Edge TTS responses are cached locally so repeated phrases (e.g. recipients' greetings) play instantly without re-synthesis. LRU eviction at 100MB.
+Because Kokoro is local and faster-than-real-time, an all-local deployment (`engine: kokoro`, `fallback_engine: piper`) has **no network dependency and no licensing exposure** while still delivering high-quality voice — the recommended posture for commercial builds (§13.2).
+
+Voice cache is keyed by `(text, voice_id, engine_version)`. Synthesised responses are cached locally so repeated phrases (e.g. recipients' greetings) play instantly without re-synthesis. LRU eviction at 100MB.
 
 ### 13.2 Edge TTS licensing concerns
 
@@ -877,15 +889,16 @@ Edge TTS is a free Microsoft service. Microsoft's terms restrict commercial use 
 - **For personal / individual users:** low risk. The Python `edge-tts` library has been used widely for years without enforcement.
 - **For commercial distribution of vessel:** higher risk. If vessel ships as a paid product or generates voiced content for downstream commercial use, Microsoft could change terms or revoke access.
 - **Mitigation paths:**
+  - **Make Kokoro-82M the default engine for commercial builds** and Edge TTS an enthusiast-tier, opt-in option. Kokoro is Apache-2.0 (clean for commercial distribution), local (no per-request terms to violate), and near-Edge-TTS quality — so this mitigation costs little perceptual quality, unlike falling back to Piper. This is the leading resolution to open question #11.
   - Make Edge TTS opt-in with a clear license-acknowledgement gate at first-use.
-  - Add a paid alternative TTS provider option (ElevenLabs, Cartesia, Azure Cognitive Speech with proper licensing) for commercial users.
-  - Treat Piper as the default for commercial builds and Edge TTS as an enthusiast-tier option.
+  - Add a paid alternative TTS provider option (ElevenLabs, Cartesia, Azure Cognitive Speech with proper licensing) for users who want cloud voices with explicit commercial terms.
+  - Piper remains available as the minimal/most-constrained-hardware fallback, but is no longer the *only* clean-licensed local option.
 
-This is an open product/legal question, not just a technical one. See §14 open question #11.
+This is an open product/legal question, not just a technical one, but Kokoro substantially de-risks it. See §14 open question #11.
 
 ### 13.3 Voice catalog management
 
-Vessel ships with a curated default voice list (10–15 voices spanning accent / pitch / personality), each tagged with the upstream voice ID and a vessel-friendly display name ("Warm British Female", "Calm American Male"). Users can override with any Edge TTS or Piper voice ID via settings.
+Vessel ships with a curated default voice list (10–15 voices spanning accent / pitch / personality), each tagged with its per-engine upstream voice ID(s) and a vessel-friendly display name ("Warm British Female", "Calm American Male"). Where a display name has a close match across engines (e.g. an Edge TTS voice and a Kokoro voice of similar character), the catalog entry records both IDs so a recipient's chosen voice survives an engine switch. Users can override with any Edge TTS, Kokoro, or Piper voice ID via settings.
 
 Voice catalog updates ride along with vessel version updates (§10.7) — the catalog is bundled, not fetched at runtime.
 
@@ -903,7 +916,7 @@ These need resolution before the corresponding phase starts.
 8. **Manifest capability gating UX — first-render approval flow.** Per-aspect sticky approvals (passkey-style)? Per-session like browser permissions? Hybrid? Resolution before Phase 5 wires manifest rendering.
 9. **Cleanup-LLM provider when offline.** Claude Haiku requires net. Local fallback model (Llama 3.x small / Phi-mini) feasibility — does the quality bar hold without the cloud LLM? Resolution during Phase 1.
 10. **Glaido cleanup-pass benchmark target.** What concrete latency / quality bar does vessel commit to before Phase 5 ships? Calibrated during Phase 1 acceptance.
-11. **Edge TTS licensing for commercial distribution.** §13.2 — open product/legal question. Resolution before any paid release; not blocking dev.
+11. **Edge TTS licensing for commercial distribution.** §13.2 — open product/legal question. Resolution before any paid release; not blocking dev. **Leading resolution (v0.2.1):** ship **Kokoro-82M** (Apache-2.0, local, high-quality) as the commercial-build default engine and make Edge TTS an opt-in enthusiast option; this removes the licensing exposure without the quality cliff of falling back to Piper. Remaining sub-question: confirm Kokoro voice quality clears the §13.3 catalog bar on the target hardware during Phase 2.
 12. **VRM model sourcing pipeline for v1 release.** Bundled CC0 placeholders are fine for development; what does the production v1 ship with? Commission a small set of vessel-branded VRMs? Curate community CC-BY models? Allow users to bring their own only? See §17 for sourcing concerns.
 13. **Manifest panel window management.** v1 spec says "one panel per manifest." What about overlap, z-order, focus stealing, multi-monitor placement? Phase 5 implementation question.
 14. **Wayland global hotkey support.** §10.6 — Wayland support is uneven; some compositors expose hotkey APIs, others don't. Decision: declare X11-only on Linux for v1, or invest in compositor-specific support? Resolution before Linux ships.
@@ -971,6 +984,7 @@ Targets, not commitments. Measured during Phase 5 acceptance and tracked in regr
 | Cleanup-LLM pass (Claude Haiku) | < 800ms | API latency dominated. Local model would be ~200-400ms. |
 | Backend round-trip | budget 0 — depends on backend | Vessel doesn't control this; just reports it for telemetry. |
 | TTS (Edge TTS, 1 sentence) | < 600ms | Cloud round-trip; cached responses are instant. |
+| TTS (Kokoro, 1 sentence) | < 400ms | Local, faster-than-real-time on CPU; well under budget on any GPU. No network jitter. |
 | Rhubarb-lip-sync (1 sentence, ~5s of audio) | < 300ms | Per-sentence; runs in parallel with TTS-next-sentence. |
 | Idle CPU | < 5% one core | App should not impact battery. |
 | Idle RAM (engine + shell + active VRM) | < 600MB | VRM + Three.js is ~150-200MB; whisper model ~200MB; engine overhead ~150MB. |
@@ -1067,13 +1081,14 @@ Two candidate release forms (Phase 0 Spike 0.1 decides):
 - `vessel-engine` — main binary (Rust, statically-linked where possible).
 - `whisper-cpp` shared library + `base.en` model file (downloaded on first run if missing, ~140MB).
 - `rhubarb` binary (per-platform; ~20MB).
-- `piper` binary + 1-2 default Piper voice models (~50MB total) for offline TTS.
+- Kokoro-82M ONNX model + voice pack (~300MB) for local high-quality TTS, run via the `ort` (onnxruntime) crate — no separate binary or Python. Candidate for first-run download rather than bundling if total size matters.
+- `piper` binary + 1-2 default Piper voice models (~50MB total) for minimal/offline TTS fallback.
 - `vocab-registry.json` — UI manifest vocabulary, version-stamped.
 - `voices.json` — TTS voice catalog.
 - `default-manifests/` — bundled UIs (avatar-default, chat-default).
 - `assets/` — bundled CC0 VRMs, default portraits, idle animation rigs.
 
-Total bundle size estimate: ~400-500MB. Larger than ideal; could be split into "core install" + "STT model download on first run" if size matters for distribution.
+Total bundle size estimate: ~700-800MB with the Kokoro model included (~400-500MB without it). Larger than ideal; the model files (Whisper `base.en` ~140MB + Kokoro ~300MB) are the obvious split point — ship a lean "core install" and pull STT/TTS models on first run if download size matters for distribution.
 
 ## 22. Test strategy
 
