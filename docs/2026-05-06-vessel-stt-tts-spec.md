@@ -2,7 +2,7 @@
 
 **Date:** 2026-05-06  
 **Status:** Draft  
-**Repo:** `nexus-cw/vessel`
+**Repo:** `CarriedWorldUniverse/vessel`
 
 ---
 

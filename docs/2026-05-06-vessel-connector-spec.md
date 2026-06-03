@@ -1,7 +1,7 @@
 # Vessel Connector SDK Spec v0.1
 
 **Date:** 2026-05-06  
-**Status:** Draft — superseded at protocol level by [`agent-network/docs/2026-05-06-vessel-connector-spec.md`](https://github.com/nexus-cw/nexus/blob/main/docs/2026-05-06-vessel-connector-spec.md) (keel, 2026-05-06). This document covers the **vessel-side TypeScript SDK** that wraps that protocol — the `VesselConnector` interface vessel builds against.
+**Status:** Draft — superseded at protocol level by [`agent-network/docs/2026-05-06-vessel-connector-spec.md`](https://github.com/CarriedWorldUniverse/nexus/blob/main/docs/2026-05-06-vessel-connector-spec.md) (keel, 2026-05-06). This document covers the **vessel-side TypeScript SDK** that wraps that protocol — the `VesselConnector` interface vessel builds against.
 
 ---
 
@@ -270,7 +270,7 @@ anthropic:
 
 ## 8. Community Connectors
 
-Third parties implement `VesselConnector` from `@nexus-cw/vessel-sdk` and distribute as an npm package. Users configure vessel to load the connector by package name:
+Third parties implement `VesselConnector` from `@carriedworlduniverse/vessel-sdk` and distribute as an npm package. Users configure vessel to load the connector by package name:
 
 ```yaml
 connector:
@@ -304,7 +304,7 @@ The vessel stage adapts to roster size. A single-aspect backend renders one occu
 
 ## 10. Versioning
 
-The connector interface is versioned via `@nexus-cw/vessel-sdk`. Breaking changes bump the major version. Vessel ships with a declared minimum SDK version; connectors built against older SDK versions surface a compatibility warning.
+The connector interface is versioned via `@carriedworlduniverse/vessel-sdk`. Breaking changes bump the major version. Vessel ships with a declared minimum SDK version; connectors built against older SDK versions surface a compatibility warning.
 
 Current version: `0.1.0` (pre-release, interface may change before `1.0.0`).
 

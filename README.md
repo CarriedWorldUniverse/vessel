@@ -8,7 +8,7 @@ Vessel is a standalone product. Bring your own backend: Nexus broker, any OpenAI
 
 ## Status
 
-**Pre-implementation.** Spec v0.1 is finalised and lives at [`docs/spec.md`](docs/spec.md) (also tracked at [`nexus-cw/nexus/docs/2026-04-29-avatar-interface-spec.md`](https://github.com/nexus-cw/nexus/blob/main/docs/2026-04-29-avatar-interface-spec.md) for the spec-history record). Build planned to start at Phase 1.
+**Pre-implementation.** Spec v0.1 is finalised and lives at [`docs/spec.md`](docs/spec.md) (also tracked at [`CarriedWorldUniverse/nexus/docs/2026-04-29-avatar-interface-spec.md`](https://github.com/CarriedWorldUniverse/nexus/blob/main/docs/2026-04-29-avatar-interface-spec.md) for the spec-history record). Build planned to start at Phase 1.
 
 ## Stack (planned)
 
@@ -18,7 +18,7 @@ Vessel is a standalone product. Bring your own backend: Nexus broker, any OpenAI
 - **STT:** `whisper-rs` via Tauri Rust backend (push-to-talk at v1)
 - **TTS:** Microsoft Edge TTS (cloud) primary, Piper (local) fallback
 - **Lip sync:** `rhubarb-lip-sync` (pre-playback phoneme timing)
-- **SDK:** `@nexus-cw/vessel-sdk` — `ChatSource` interface for any chat backend
+- **SDK:** `@carriedworlduniverse/vessel-sdk` — `ChatSource` interface for any chat backend
 
 ## Build phases
 
@@ -32,10 +32,10 @@ OpenAI and Anthropic adapters bundle at v1 release; explicitly part of Phase 6 i
 
 ## Family
 
-Sibling projects under `nexus-cw`:
-- [`casket-go`](https://github.com/nexus-cw/casket-go), [`casket-ts`](https://github.com/nexus-cw/casket-ts), [`casket-dotnet`](https://github.com/nexus-cw/casket-dotnet) — crypto channel libraries.
-- [`interchange`](https://github.com/nexus-cw/interchange) — Frame-to-Frame relay server.
-- [`nexus`](https://github.com/nexus-cw/nexus) — multi-aspect coordination layer.
+Sibling projects under `CarriedWorldUniverse`:
+- [`casket-go`](https://github.com/CarriedWorldUniverse/casket-go), [`casket-ts`](https://github.com/CarriedWorldUniverse/casket-ts), [`casket-dotnet`](https://github.com/CarriedWorldUniverse/casket-dotnet) — crypto channel libraries.
+- [`interchange`](https://github.com/CarriedWorldUniverse/interchange) — Frame-to-Frame relay server.
+- [`nexus`](https://github.com/CarriedWorldUniverse/nexus) — multi-aspect coordination layer.
 
 ## License
 
