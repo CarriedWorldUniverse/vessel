@@ -8,7 +8,7 @@ Vessel is a standalone product. Bring your own backend: Nexus broker, any OpenAI
 
 ## Status
 
-**Pre-implementation.** Spec v0.1 is finalised and lives at [`docs/spec.md`](docs/spec.md) (also tracked at [`nexus-cw/nexus/docs/2026-04-29-avatar-interface-spec.md`](https://github.com/nexus-cw/nexus/blob/main/docs/2026-04-29-avatar-interface-spec.md) for the spec-history record). Build planned to start at Phase 1.
+**Pre-implementation.** Spec v0.2 is finalised and lives at [`docs/spec.md`](docs/spec.md) (also tracked at [`nexus-cw/nexus/docs/2026-04-29-avatar-interface-spec.md`](https://github.com/nexus-cw/nexus/blob/main/docs/2026-04-29-avatar-interface-spec.md) for the spec-history record). Build planned to start at Phase 1.
 
 ## Stack (planned)
 
@@ -39,4 +39,4 @@ Sibling projects under `nexus-cw`:
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+Apache-2.0. See [LICENSE](LICENSE).
