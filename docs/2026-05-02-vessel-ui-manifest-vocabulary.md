@@ -313,7 +313,7 @@ The trust model is: **a manifest is no more dangerous than a webpage from the sa
 
 ## 11. Open questions
 
-1. **Vocabulary package — `@nexus-cw/vessel-sdk` or `@nexus-cw/vessel-ui-vocab`?** Coupling to SDK lifecycle vs independent versioning. Open question §14 #7 in main spec. Lean: independent package, so manifest schema can evolve independent of adapter SDK; SDK takes a peer dep.
+1. **Vocabulary package — `@carriedworlduniverse/vessel-sdk` or `@carriedworlduniverse/vessel-ui-vocab`?** Coupling to SDK lifecycle vs independent versioning. Open question §14 #7 in main spec. Lean: independent package, so manifest schema can evolve independent of adapter SDK; SDK takes a peer dep.
 2. **Patch op set scope.** v1 ops cover the cases we can name; will real-world manifest authors hit cases that need more? Defer expansion until empirical pressure.
 3. **Form submission semantics.** Today `submit` collects all input values keyed by id. Does the form scope by container? What about multiple `submit` buttons in different panels of the same manifest? Probably scope by nearest enclosing `panel` with a declared `form_id`.
 4. **Capability persistence across vessel updates.** If vessel ships a v2 vocabulary that splits or renames a capability, how do existing approvals migrate? Probably a one-time re-prompt on first encounter post-update.

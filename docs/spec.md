@@ -2,7 +2,7 @@
 
 **Date:** 2026-05-02 (v0.2 amendments) — original v0.1 dated 2026-04-29
 **Status:** Draft
-**Repo:** `nexus-cw/vessel`
+**Repo:** `CarriedWorldUniverse/vessel`
 
 ## v0.2 changes (summary)
 
@@ -52,7 +52,7 @@ These are not open questions in this spec:
 3. **Three.js + @pixiv/three-vrm rendering.** Web-tech consistent with the build's frontend. Unity reserved for a possible later swap if animation richness becomes a differentiator.
 4. **Tauri v2 thin shell + engine process — two-tier architecture.** Tauri v2 hosts the transparent always-on-top window and routes audio I/O between OS and engine. The engine holds services + SDK + manifest renderer. Smaller binaries than Electron (~5MB vs ~80MB), native APIs for transparent overlay. The two-tier process split is **locked** as the architecture; beta runs the two as ordinary local processes. **Release-time distribution packaging is open** (OCI image, self-contained sidecar bundle, or both) — see §14 open question #6 and §21. That decision shapes release builds; it does not change the process model.
 5. **whisper.cpp via Rust backend (`whisper-rs`) as the cross-platform STT default. STT engine is pluggable.** No node-gyp surface; native code stays in Rust where it belongs. The runtime exposes an `STTEngine` trait so per-platform accelerators (WhisperKit on macOS, ONNX+DirectML on Windows) can drop in as Phase 6+ optimisations without changing the chain. **A cleanup-LLM pass follows STT** in the input chain (Claude Haiku or local small model) and is the felt-quality moat — see §12.
-6. **SDK-first with reference adapters.** `ChatSource` interface in `@nexus-cw/vessel-sdk`. Reference adapters bundled at v1: `NexusAdapter`, `OpenAIAdapter` (OpenAI-compatible API shape — covers OpenAI, Ollama, LM Studio, llama.cpp server, vLLM, Together, Groq, OpenRouter, Mistral, DeepSeek, and most local LLM tooling), `AnthropicAdapter` (Anthropic Claude API + emulators).
+6. **SDK-first with reference adapters.** `ChatSource` interface in `@carriedworlduniverse/vessel-sdk`. Reference adapters bundled at v1: `NexusAdapter`, `OpenAIAdapter` (OpenAI-compatible API shape — covers OpenAI, Ollama, LM Studio, llama.cpp server, vLLM, Together, Groq, OpenRouter, Mistral, DeepSeek, and most local LLM tooling), `AnthropicAdapter` (Anthropic Claude API + emulators).
 7. **Single-user at v1.** Vessel-the-binary supports a single user / single config. Multi-tenant deployments are downstream consumer concerns, not v1 scope.
 8. **ChatSource transport is bidirectional and push-capable (WebSocket or SSE-with-uplink). Not MCP.** MCP is structured as agent-initiated tool calls — pull-shaped, with no clean way to wake an agent with a new turn. ChatSource needs push capability on both sides: user → backend (the wake direction) and backend → user (response stream, attention calls, UI manifests, all unsolicited). MCP remains *optional and orthogonal* — vessel may expose mic/speaker/avatar control as MCP tools the harness can pull on during its own turn, but that is a capability surface, not the conversation channel.
 9. **One SDK, not two.** UI manifests are a payload type carried over the same ChatSource connection as chat messages — not a separate Interface SDK. An aspect that wants to push a custom UI uses the same connection it uses to post chat. Trust boundary (component vocabulary, capability gating, user approval) lives in vessel's runtime regardless of which backend emitted the manifest.
@@ -204,7 +204,7 @@ The shell-engine boundary is local-machine IPC. Two transport candidates, decide
 
 ## 5. Vessel SDK
 
-The SDK is the integration contract between Vessel and any chat backend. Published as `@nexus-cw/vessel-sdk` on npm.
+The SDK is the integration contract between Vessel and any chat backend. Published as `@carriedworlduniverse/vessel-sdk` on npm.
 
 ### 5.1 ChatSource interface
 
@@ -295,7 +295,7 @@ UI events flow back through the existing `send()` method as a structured `UIEven
 
 Adapters not in the v1 bundle (Cohere, Replicate, custom backends) are community-contributed. Two paths:
 - **Loose:** published as `@<author>/vessel-adapter-<backend>` on npm, users install per-need.
-- **Curated:** a `nexus-cw/vessel-adapters` mono-repo accepting community contributions to a quality bar. Optional, depending on contributor signal.
+- **Curated:** a `CarriedWorldUniverse/vessel-adapters` mono-repo accepting community contributions to a quality bar. Optional, depending on contributor signal.
 
 The SDK contract is the only thing core ships forever. Adapters in core (the three above) carry maintenance commitment; everything else is community.
 
@@ -567,7 +567,7 @@ Conflict precedence: user YAML > manifest hint > backend roster default.
 
 **Secrets never live in the config YAML.** YAML holds *references* (`secret_ref: "vessel.nexus.token"`); the actual secret lives in the OS-native keystore:
 
-- macOS: Keychain (`Security` framework, service prefix `com.nexus-cw.vessel.`).
+- macOS: Keychain (`Security` framework, service prefix `com.carriedworlduniverse.vessel.`).
 - Windows: Credential Manager (`CredWrite` API, target prefix `vessel:`).
 - Linux: Secret Service API via `libsecret` (`org.freedesktop.secrets`); falls back to a file-based encrypted store (`age`-encrypted) if no keyring is available.
 
@@ -697,7 +697,7 @@ Rationale: chains are where the *unknowns* live (STT quality, TTS+lipsync timing
 **Goal:** Full conversation, text-only. Validates SDK shape under real backend pressure.
 
 **Deliverables:**
-- `@nexus-cw/vessel-sdk` package — `ChatSource` interface, types (§5), including v0.2 `BackendEvent` UI extensions and `UIManifest` skeleton.
+- `@carriedworlduniverse/vessel-sdk` package — `ChatSource` interface, types (§5), including v0.2 `BackendEvent` UI extensions and `UIManifest` skeleton.
 - `NexusAdapter` — WebSocket connection, bearer auth, push subscription, `send()` for outbound chat + UI events.
 - CLI: `vessel-chat` chains Phase 1 and Phase 2 with `NexusAdapter` — speak, see backend response, hear it spoken. No UI.
 - Wire in `turn.begin` / `turn.end` and `turn_id` plumbing.
@@ -766,7 +766,7 @@ The original v0.1 plan ordered phases as: Tauri shell + VRM render → ChatSourc
 **Goal:** SDK shape + first adapter end-to-end. Vessel can talk to a backend, see responses come back.
 
 **Deliverables:**
-- `@nexus-cw/vessel-sdk` package — `ChatSource` interface, types (§5).
+- `@carriedworlduniverse/vessel-sdk` package — `ChatSource` interface, types (§5).
 - `src/adapters/NexusAdapter.ts` — implements `ChatSource`, connects via WebSocket, handles auth handshake, subscribes to messages, sends via REST.
 - Test page with text input + response display. Validates the Vessel-meets-backend seam.
 
@@ -899,7 +899,7 @@ These need resolution before the corresponding phase starts.
 4. **Voice perceptual confirmation.** The configured voices for each recipient should be heard during v0.2 Phase 2 and confirmed before being baked into config defaults.
 5. ~~Default VRM portrait lighting.~~ **Resolved:** Three-point setup specified in §11 Phase 5 (was v0.1 Phase 4).
 6. **Release distribution packaging — OCI vs self-contained bundle.** *Release packaging only* — not a question about the engine/shell process split, which is locked (§3 #4). Audio device passthrough on Win/Mac Docker is the deciding constraint. Phase 0 Spike 0.1 resolves this; beta development proceeds on a local-process engine in parallel and is unaffected by the outcome.
-7. **UI manifest vocabulary package — `@nexus-cw/vessel-sdk` or `@nexus-cw/vessel-ui-vocab`?** Couples to SDK lifecycle vs independent versioning. Resolution before Phase 3 ships UI emission.
+7. **UI manifest vocabulary package — `@carriedworlduniverse/vessel-sdk` or `@carriedworlduniverse/vessel-ui-vocab`?** Couples to SDK lifecycle vs independent versioning. Resolution before Phase 3 ships UI emission.
 8. **Manifest capability gating UX — first-render approval flow.** Per-aspect sticky approvals (passkey-style)? Per-session like browser permissions? Hybrid? Resolution before Phase 5 wires manifest rendering.
 9. **Cleanup-LLM provider when offline.** Claude Haiku requires net. Local fallback model (Llama 3.x small / Phi-mini) feasibility — does the quality bar hold without the cloud LLM? Resolution during Phase 1.
 10. **Glaido cleanup-pass benchmark target.** What concrete latency / quality bar does vessel commit to before Phase 5 ships? Calibrated during Phase 1 acceptance.
@@ -946,7 +946,7 @@ These need resolution before the corresponding phase starts.
 - **Shell** — the thin Tauri v2 process hosting windows + OS integration. The non-engine process.
 - **Speech queue** — the FIFO of pending speech-tuples. User-interrupts, stale-drops, capped.
 - **Surface** — a place vessel renders manifests: avatar surface, manifest panel, sidebar.
-- **Vessel SDK** — `@nexus-cw/vessel-sdk` npm package, `ChatSource` interface + types.
+- **Vessel SDK** — `@carriedworlduniverse/vessel-sdk` npm package, `ChatSource` interface + types.
 - **Vocabulary** — the set of named component types vessel's renderer recognises (UI manifest context).
 
 ## 17. VRM model sourcing and licensing
@@ -1118,9 +1118,9 @@ A "vessel dev mode" runs the engine + a minimal harness that lets developers pas
 vessel/
   shell/              # Tauri v2 app (Rust + TS/Preact renderer)
   engine/             # engine binary (Rust)
-  sdk/                # @nexus-cw/vessel-sdk (TypeScript)
-  vocab/              # @nexus-cw/vessel-ui-vocab (TypeScript, schema + types)
-  adapters/           # @nexus-cw/vessel-adapter-* packages (TypeScript)
+  sdk/                # @carriedworlduniverse/vessel-sdk (TypeScript)
+  vocab/              # @carriedworlduniverse/vessel-ui-vocab (TypeScript, schema + types)
+  adapters/           # @carriedworlduniverse/vessel-adapter-* packages (TypeScript)
     nexus/
     openai/
     anthropic/
@@ -1147,7 +1147,7 @@ vessel/
 ### 23.4 Adapter development
 
 - New adapters live in `@<author>/vessel-adapter-<backend>` (community) or `vessel/adapters/<name>` (core).
-- Conformance test suite shared via `@nexus-cw/vessel-adapter-testkit`. Run against any new adapter to validate the contract.
+- Conformance test suite shared via `@carriedworlduniverse/vessel-adapter-testkit`. Run against any new adapter to validate the contract.
 - Adapter plays in the manifest playground for ad-hoc testing.
 
 ## 24. Trust model — full picture
