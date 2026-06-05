@@ -24,7 +24,18 @@
   </div>
 
   <div id="input-bar" class="overlay-bar">
-    <textarea id="input-field" placeholder="Speak to your aspects…" rows="1"></textarea>
+    <div class="status-row">
+      <span id="connection-dot" class="connection-dot"></span>
+      <span id="connection-label">Disconnected</span>
+      <button id="connect-nexus" class="small-button">Connect</button>
+      <button id="dictate-button" class="small-button">Dictate</button>
+    </div>
+    <div class="config-row">
+      <input id="nexus-url" class="config-input" type="text" spellcheck="false" placeholder="wss://nexus-host:7888">
+      <input id="nexus-token" class="config-input token-input" type="password" spellcheck="false" placeholder="token optional">
+      <label class="config-check"><input id="nexus-insecure" type="checkbox"> self-signed</label>
+    </div>
+    <textarea id="input-field" placeholder="Type or dictate to Nexus…" rows="1"></textarea>
   </div>
 
   <script type="module" src="scene.js"></script>

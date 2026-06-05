@@ -15,6 +15,8 @@ npm install
 npm start
 ```
 
+`npm start` builds the local Apple Speech helper before launching Electron.
+
 For development with DevTools:
 
 ```bash
@@ -48,3 +50,20 @@ npm run check
 ```
 
 Expected result: all JavaScript files parse without output.
+
+## Nexus Connection
+
+The reference build connects to Nexus as an operator over `/connect`.
+
+```bash
+export NEXUS_WS_URL=wss://localhost:7888
+export NEXUS_TOKEN=<operator-or-dev-token>
+export NEXUS_INSECURE_TLS=1   # only for local self-signed certs
+npm start
+```
+
+The app sends `chat.send`, receives `chat.deliver`, updates the active speaker, and speaks incoming aspect messages with macOS `say`.
+
+## Apple Speech
+
+Click **Dictate**, speak, then click **Stop**. Vessel records a WAV locally, sends it to the native Apple Speech helper, and sends the transcript to Nexus.

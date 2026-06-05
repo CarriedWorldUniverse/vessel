@@ -109,6 +109,85 @@ html, body {
   pointer-events: auto;
 }
 
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+  margin-bottom: 6px;
+  color: rgba(232,232,240,0.72);
+  font-size: 12px;
+}
+
+.config-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(120px, 180px) auto;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.config-input {
+  min-width: 0;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  background: rgba(255,255,255,0.06);
+  color: #e8e8f0;
+  font: inherit;
+  font-size: 12px;
+  padding: 6px 8px;
+  outline: none;
+}
+
+.config-input:focus {
+  border-color: rgba(255,255,255,0.24);
+}
+
+.config-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: rgba(232,232,240,0.72);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.connection-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #777;
+  flex: 0 0 auto;
+}
+
+.connection-dot[data-status="connected"] { background: #28c840; }
+.connection-dot[data-status="connecting"] { background: #ffbd2e; }
+.connection-dot[data-status="error"] { background: #ff5f57; }
+
+#connection-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.small-button {
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 6px;
+  background: rgba(255,255,255,0.08);
+  color: #e8e8f0;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1;
+  padding: 6px 9px;
+  cursor: pointer;
+}
+
+.small-button:hover {
+  background: rgba(255,255,255,0.14);
+}
+
 #input-field {
   width: 100%;
   background: transparent;

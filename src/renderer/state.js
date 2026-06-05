@@ -1,5 +1,4 @@
 // Central reactive state for vessel. Scene and overlays read from here.
-// In Part 4 this gets driven by the broker adapter; for now it's static mock data.
 
 export const stageState = {
   // Per-aspect status: 'offline' | 'online' | 'speaking'
@@ -10,12 +9,12 @@ export const stageState = {
     maren:  { status: 'offline' },
     verity: { status: 'online' },
     keel:   { status: 'online' },
-    anvil:  { status: 'speaking' },
+    anvil:  { status: 'online' },
     plumb:  { status: 'offline' },
   },
 
   // Which aspect is currently speaking (null = nobody)
-  activeSpeaker: 'anvil',
+  activeSpeaker: null,
 
   // Which aspect the active speaker is addressing (null = operator/general)
   // Derived from message metadata by the connector layer
@@ -23,6 +22,15 @@ export const stageState = {
 
   // Right panel content for the active speaker
   panelContent: null,
+
+  lastMessageId: 0,
+
+  connection: {
+    status: 'disconnected',
+    detail: '',
+  },
+
+  transcript: '',
 };
 
 // Simple pub/sub for state changes
@@ -34,5 +42,14 @@ export function onStateChange(fn) {
 
 export function setState(patch) {
   Object.assign(stageState, patch);
+  listeners.forEach(fn => fn(stageState));
+}
+
+export function patchAspect(name, patch) {
+  if (!name) return;
+  stageState.aspects[name] = {
+    ...(stageState.aspects[name] || { status: 'online' }),
+    ...patch,
+  };
   listeners.forEach(fn => fn(stageState));
 }

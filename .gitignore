@@ -43,3 +43,6 @@ vessel.config.local.yaml
 # Sample/test models (operator commits chosen placeholder VRMs explicitly)
 /test-models/*.vrm
 !/test-models/.gitkeep
+
+# Native helper build outputs
+/native/macos/VesselSpeech

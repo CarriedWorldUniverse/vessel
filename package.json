@@ -5,15 +5,17 @@
   "author": "Carried World Universe",
   "main": "src/main/main.js",
   "scripts": {
-    "start": "electron .",
-    "dev": "electron . --dev",
+    "build:speech-helper": "swiftc native/macos/VesselSpeech.swift -o native/macos/VesselSpeech",
+    "start": "npm run build:speech-helper && electron .",
+    "dev": "npm run build:speech-helper && electron . --dev",
     "check": "node --check src/main/main.js && node --check src/main/preload.js && for f in src/renderer/*.js; do node --check \"$f\"; done",
     "sign:mac:adhoc": "find dist -maxdepth 2 -name '*.app' -exec codesign --force --deep --sign - {} \\;",
-    "build:mac": "electron-builder --mac --dir && npm run sign:mac:adhoc",
+    "build:mac": "npm run build:speech-helper && electron-builder --mac --dir && npm run sign:mac:adhoc",
     "dist:mac": "npm run build:mac"
   },
   "dependencies": {
-    "three": "^0.176.0"
+    "three": "^0.176.0",
+    "ws": "^8.21.0"
   },
   "devDependencies": {
     "electron": "^42.0.0",
@@ -28,9 +30,19 @@
       "src/**/*",
       "package.json"
     ],
+    "extraResources": [
+      {
+        "from": "native/macos/VesselSpeech",
+        "to": "native/macos/VesselSpeech"
+      }
+    ],
     "mac": {
       "category": "public.app-category.productivity",
       "identity": null,
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "Vessel records your voice when you use Dictate.",
+        "NSSpeechRecognitionUsageDescription": "Vessel uses Apple Speech to transcribe dictated prompts."
+      },
       "target": [
         "dir",
         "dmg",
