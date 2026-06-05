@@ -17,6 +17,50 @@ html, body {
   display: block;
 }
 
+/* ── Window chrome ── */
+.window-chrome {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  background: rgba(10, 10, 18, 0.72);
+  backdrop-filter: blur(12px);
+  pointer-events: auto;
+  -webkit-app-region: drag;
+}
+
+.traffic {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  -webkit-app-region: no-drag;
+}
+
+.traffic-btn {
+  width: 12px;
+  height: 12px;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.traffic-btn.close { background: #ff5f57; }
+.traffic-btn.minimize { background: #ffbd2e; }
+.traffic-btn.top { background: #28c840; }
+
+.chrome-title {
+  color: rgba(232,232,240,0.76);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
 /* ── Right panel ── */
 .overlay-panel {
   position: fixed;

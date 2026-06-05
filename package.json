@@ -2,16 +2,43 @@
   "name": "vessel",
   "version": "0.1.0",
   "description": "A desktop overlay that gives your LLM aspects a face and a voice",
+  "author": "Carried World Universe",
   "main": "src/main/main.js",
   "scripts": {
     "start": "electron .",
-    "dev": "electron . --dev"
+    "dev": "electron . --dev",
+    "check": "node --check src/main/main.js && node --check src/main/preload.js && for f in src/renderer/*.js; do node --check \"$f\"; done",
+    "sign:mac:adhoc": "find dist -maxdepth 2 -name '*.app' -exec codesign --force --deep --sign - {} \\;",
+    "build:mac": "electron-builder --mac --dir && npm run sign:mac:adhoc",
+    "dist:mac": "npm run build:mac"
   },
   "dependencies": {
     "three": "^0.176.0"
   },
   "devDependencies": {
-    "electron": "^42.0.0"
+    "electron": "^42.0.0",
+    "electron-builder": "^26.8.1"
   },
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "build": {
+    "appId": "universe.carriedworld.vessel",
+    "productName": "Vessel",
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "identity": null,
+      "target": [
+        "dir",
+        "dmg",
+        "zip"
+      ]
+    },
+    "dmg": {
+      "sign": false
+    }
+  }
 }

@@ -30,6 +30,24 @@ Vessel is a standalone product. Bring your own backend: Nexus broker, any OpenAI
 
 OpenAI and Anthropic adapters bundle at v1 release; explicitly part of Phase 6 integration testing.
 
+## macOS reference build
+
+The current repo includes a runnable Electron + Three.js reference prototype for macOS. It is a proof of the Vessel stage and overlay model, not the final Apple-first architecture.
+
+```bash
+npm install
+npm start
+```
+
+To build a local unsigned app bundle:
+
+```bash
+npm run build:mac
+open dist/mac*/Vessel.app
+```
+
+See [`docs/mac-reference-build.md`](docs/mac-reference-build.md) for details.
+
 ## Family
 
 Sibling projects under `CarriedWorldUniverse`:

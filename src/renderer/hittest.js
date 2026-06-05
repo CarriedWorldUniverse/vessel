@@ -4,9 +4,10 @@
 // the desktop beneath.
 
 const interactiveEls = [
+  document.getElementById('window-chrome'),
   document.getElementById('right-panel'),
   document.getElementById('input-bar'),
-];
+].filter(Boolean);
 
 let currentlyIgnoring = false;
 

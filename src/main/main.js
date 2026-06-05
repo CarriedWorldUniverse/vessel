@@ -3,10 +3,13 @@ const path = require('path');
 
 const isDev = process.argv.includes('--dev');
 
+app.setName('Vessel');
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1400,
     height: 900,
+    title: 'Vessel',
     transparent: true,
     frame: false,
     alwaysOnTop: true,
@@ -35,10 +38,28 @@ function createWindow() {
   ipcMain.on('set-ignore-mouse-events', (_event, ignore) => {
     win.setIgnoreMouseEvents(ignore, { forward: true });
   });
+
+  ipcMain.on('window-close', () => {
+    win.close();
+  });
+
+  ipcMain.on('window-minimize', () => {
+    win.minimize();
+  });
+
+  ipcMain.on('window-toggle-top', () => {
+    win.setAlwaysOnTop(!win.isAlwaysOnTop());
+  });
 }
 
 app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
   app.quit();
+});
+
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  }
 });
