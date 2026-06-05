@@ -8,7 +8,7 @@ Vessel is a standalone product. Bring your own backend: Nexus broker, any OpenAI
 
 ## Status
 
-**Pre-implementation.** Spec v0.2 is finalised and lives at [`docs/spec.md`](docs/spec.md) (also tracked at [`CarriedWorldUniverse/nexus/docs/2026-04-29-avatar-interface-spec.md`](https://github.com/CarriedWorldUniverse/nexus/blob/main/docs/2026-04-29-avatar-interface-spec.md) for the spec-history record). Build planned to start at Phase 1.
+**Spec + prototype.** Spec v0.2 is finalised and lives at [`docs/spec.md`](docs/spec.md) (also tracked at [`CarriedWorldUniverse/nexus/docs/2026-04-29-avatar-interface-spec.md`](https://github.com/CarriedWorldUniverse/nexus/blob/main/docs/2026-04-29-avatar-interface-spec.md) for the spec-history record). The repo also contains an early Electron + Three.js stage prototype.
 
 ## Stack (planned)
 
