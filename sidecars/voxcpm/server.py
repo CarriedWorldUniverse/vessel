@@ -10,6 +10,8 @@ from __future__ import annotations
 import argparse
 import io
 import os
+
+import torch
 from contextlib import asynccontextmanager
 from functools import lru_cache
 
@@ -48,11 +50,18 @@ def load_model(model_id: str):
 
 def synthesize(text: str, model_id: str):
     model = load_model(model_id)
-    wav = model.generate(
-        text=text,
-        cfg_value=float(os.getenv("VESSEL_VOXCPM_CFG_VALUE", "2.0")),
-        inference_timesteps=int(os.getenv("VESSEL_VOXCPM_INFERENCE_TIMESTEPS", "10")),
-    )
+    with torch.inference_mode():
+        wav = model.generate(
+            text=text,
+            cfg_value=float(os.getenv("VESSEL_VOXCPM_CFG_VALUE", "2.0")),
+            inference_timesteps=int(os.getenv("VESSEL_VOXCPM_INFERENCE_TIMESTEPS", "10")),
+        )
+    # Release the per-request CUDA cache so VRAM does not creep over time:
+    # VoxCPM2 crept ~6.5GB -> 16GB over a day of use without this (the cached
+    # allocator holds freed blocks). inference_mode also avoids any autograd
+    # graph during generation.
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
     sample_rate = getattr(model.tts_model, "sample_rate", 48000)
     return wav, sample_rate
 
