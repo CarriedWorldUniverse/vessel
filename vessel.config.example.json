@@ -1,0 +1,35 @@
+{
+  "nexus": {
+    "wsUrl": "wss://nexus.tail41686e.ts.net:7888",
+    "token": "",
+    "insecureTLS": true
+  },
+  "stage": {
+    "visibleAspects": [],
+    "excludedAspects": ["dispatch", "dispatch-controller", "dispatch_controller", "controller", "operator"]
+  },
+  "tts": {
+    "engine": "voxcpm",
+    "voxcpm": {
+      "baseUrl": "http://dmonextreme.tail41686e.ts.net:30435/v1",
+      "model": "openbmb/VoxCPM2",
+      "prompts": {
+        "shadow": "composed female orchestrator, warm but precise, measured pace, clear New Zealand English",
+        "anvil": "grounded male builder, low confident voice, practical cadence, concise delivery",
+        "plumb": "friendly male builder, lighter voice than Anvil, quick collaborative cadence"
+      }
+    }
+  },
+  "understanding": {
+    "enabled": true,
+    "provider": "openai-compatible",
+    "baseUrl": "http://dmonextreme.tail41686e.ts.net:30434/v1",
+    "model": "hf.co/google/gemma-4-12B-it-qat-q4_0-gguf:latest",
+    "apiKey": "",
+    "reviewBeforeSend": true,
+    "requestTimeoutMs": 20000,
+    "speechSummaryMode": "heuristic",
+    "speechSummaryThreshold": 240,
+    "speechSummaryMaxWords": 55
+  }
+}

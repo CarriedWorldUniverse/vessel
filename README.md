@@ -2,7 +2,7 @@
 
 A desktop application that gives any LLM a face and a voice.
 
-The user speaks (or types), the message is routed to the configured chat backend, and the response comes back as audio in a per-aspect voice, lip-syncing to a 3D VRM avatar in a transparent always-on-top window.
+The user speaks (or types), the message is routed to the configured chat backend, and the response comes back as audio in a per-aspect voice, lip-syncing to a 3D VRM avatar.
 
 Vessel is a standalone product. Bring your own backend: Nexus broker, any OpenAI-compatible API (OpenAI, Ollama, LM Studio, llama.cpp server, vLLM, Together, Groq, OpenRouter, Mistral, DeepSeek, ...), Anthropic Claude API, or community-built adapters against the Vessel SDK.
 
@@ -32,7 +32,7 @@ OpenAI and Anthropic adapters bundle at v1 release; explicitly part of Phase 6 i
 
 ## macOS reference build
 
-The current repo includes a runnable Electron + Three.js reference prototype for macOS. It is a proof of the Vessel stage and overlay model, not the final Apple-first architecture.
+The current repo includes a runnable Electron + Three.js reference prototype for macOS. It is a focused app-window proof of the Vessel stage, not the final Apple-first architecture.
 
 ```bash
 npm install
@@ -47,6 +47,8 @@ open dist/mac*/Vessel.app
 ```
 
 See [`docs/mac-reference-build.md`](docs/mac-reference-build.md) for details.
+
+The reference build supports natural aspect targeting for speech. Say `Hey shadow, can you get me the result for today?` and Vessel routes it through Nexus `aspect.say`, focuses Shadow, and speaks Shadow's response when Nexus delivers it. Background messages from other aspects are shown as notices rather than spoken over the active target. The visible stage defaults to `shadow`, `anvil`, and `plumb`; override with `VESSEL_VISIBLE_ASPECTS`. VoxCPM is the configured TTS path for the dmonextreme reference setup, with macOS `say` as the fallback.
 
 ## Family
 

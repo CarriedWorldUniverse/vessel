@@ -29,6 +29,7 @@ class NexusClient {
     this.pending = new Map();
     this.connected = false;
     this.config = null;
+    this.lastError = '';
   }
 
   status(status, detail = '') {
@@ -53,6 +54,7 @@ class NexusClient {
 
     this.ws.on('open', () => {
       this.connected = true;
+      this.lastError = '';
       this.status('connected', url.origin);
       this.request('roster.list', {}).catch((err) => {
         this.status('connected', `roster.list failed: ${err.message}`);
@@ -66,12 +68,13 @@ class NexusClient {
     });
 
     this.ws.on('error', (err) => {
+      this.lastError = err.message;
       this.status('error', err.message);
     });
 
     this.ws.on('close', () => {
       this.connected = false;
-      this.status('disconnected', 'Nexus connection closed.');
+      this.status('disconnected', this.lastError || 'Nexus connection closed.');
       for (const { reject, timer } of this.pending.values()) {
         clearTimeout(timer);
         reject(new Error('Nexus connection closed.'));
@@ -126,6 +129,14 @@ class NexusClient {
     });
     this.send(env);
     return env.id;
+  }
+
+  async sayAspect(aspect, content) {
+    const env = await this.request('aspect.say', {
+      aspect,
+      content,
+    });
+    return env.payload?.msg_id || env.payload?.msgID || 0;
   }
 
   handleMessage(data) {

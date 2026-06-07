@@ -51,14 +51,35 @@ export interface STTEngine {
 
 `final: false` = partial/streaming word. `final: true` = committed utterance, ready to send.
 
-### STT cleanup pass (optional)
+### Speech understanding pass (optional)
 
 A fast cheap model pass after STT, before sending to the backend:
 - Removes filler words ("um", "uh", "like")
 - Adds punctuation
-- Normalises "hey forge," addressing to clean `@forge:` prefix
+- Normalises attention phrases such as "hey forge" to clean routing metadata
+- Corrects local domain terms without changing intent (`plum` → `plumb`, `bridal` → `bridle`, `next us` → `nexus`)
+- Emits both the cleaned prompt and structured routing (`target`, `confidence`, optional `notes`)
 
-**Default: gemma4 local** — same model already used for knowledge classification (#9781). Cheap, local, no external dependency. Cleanup is well within its wheelhouse. Off by default — operator opts in. Configurable upgrade to Claude Haiku for operators who want higher cleanup quality on edge cases (specific dialects, heavy technical vocabulary) — same pluggable-engine pattern as STT/TTS.
+This layer is **intent preservation**, not message rewriting. It may clean punctuation, filler words, obvious STT errors, and recipient targeting. It must not add facts, summarize the user's request, inject system context, or make the request more agreeable to the backend agent.
+
+**Default: off in the reference build; configurable in the engine.** Recommended local deployment is an OpenAI-compatible endpoint hosted by the operator, for example Ollama or llama-server on `dmonextreme` running a Gemma-class model such as `gemma-4-12b` if that is the installed model name. Cloud options such as Claude Haiku or OpenAI mini models are valid when the operator prefers cloud cleanup quality.
+
+Example configuration:
+
+```yaml
+stt:
+  engine: "whisper-cpp"
+  model: "base.en"
+  understanding:
+    enabled: true
+    provider: "openai-compatible"
+    base_url: "http://dmonextreme.tail41686e.ts.net:30434/v1"
+    model: "gemma-4-12b"
+    api_key_ref: ""      # empty when the local server does not require auth
+    review_before_send: true
+```
+
+The same provider interface should support Ollama, llama-server, LM Studio, vLLM, OpenAI, Anthropic-compatible wrappers, or any other model serving stack that can accept a short transcript cleanup prompt.
 
 ---
 
@@ -71,6 +92,7 @@ A fast cheap model pass after STT, before sending to the backend:
 | 0 | Web Speech API `SpeechSynthesis` | Robotic | Limited | No phonemes | Free | None |
 | 1 | `edge-tts` | Good | ~300 voices | No phonemes | Free | npm |
 | 2 | Piper (local) | Good | One model per aspect | Phoneme output | Free | binary sidecar |
+| 2 | VoxCPM (local sidecar) | Very good | Prompt-tuned per aspect | No phonemes yet | Free | Python/GPU sidecar |
 | 3 | Inworld TTS | Excellent | 271+ voices, voice cloning | Timestamp stream | Paid ($35/1M chars) | API key |
 | 3 | ElevenLabs | Excellent | Cloned voice per aspect | Phoneme stream | Paid | API key |
 
@@ -78,6 +100,7 @@ A fast cheap model pass after STT, before sending to the backend:
 
 **Recommended upgrade path:**
 - **Privacy/offline:** Tier 2 (Piper) — runs entirely locally, per-aspect voice models (~50MB each). Also enables proper VRM lipsync via phoneme output.
+- **Local tunable voices:** Tier 2 (VoxCPM) — runs as a supervised sidecar or cluster service. Natural-language voice prompts allow distinct female and male agent voices without giving the backend agent direct control over the audio stack.
 - **Cloud quality:** Tier 3 (Inworld TTS) — 271+ voices, voice cloning, sub-200ms median latency, OpenAI-compatible API shape, streaming NDJSON audio. Free tier: 40 min/month. Node.js HTTP client, no SDK needed. **Probe script at `tmp/inworld-tts-probe.js`** — run with `INWORLD_API_KEY=<key>` to validate latency and audio quality against `edge-tts` before deciding.
 - **Maximum expressiveness:** Tier 3 (ElevenLabs) — best voice quality, voice cloning, phoneme streaming for lipsync.
 
@@ -144,9 +167,17 @@ aspects:
     elevenlabs_voice_id: abc123         # ElevenLabs voice ID
   wren:
     voice: en-GB-SoniaNeural
+  shadow:
+    voice_profile:
+      gender: female
+      prompt: "composed female orchestrator, warm but precise, measured pace, clear New Zealand English"
+  anvil:
+    voice_profile:
+      gender: male
+      prompt: "grounded male builder, low confident voice, practical cadence, concise delivery"
 ```
 
-Vessel resolves voice config to the active TTS engine. If the configured voice type doesn't match the active engine (e.g. `elevenlabs_voice_id` set but engine is Piper), vessel falls back to a default voice for that engine.
+Vessel resolves voice config to the active TTS engine. If the configured voice type doesn't match the active engine (e.g. `elevenlabs_voice_id` set but engine is Piper), vessel falls back to a default voice for that engine. For prompt-tunable engines such as VoxCPM, `voice_profile.prompt` is used as the synthesis style instruction; for preset catalog engines, the profile is resolved to the nearest available voice.
 
 ---
 

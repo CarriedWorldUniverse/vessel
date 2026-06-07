@@ -1,22 +1,3 @@
-// Tell the Electron main process to pass mouse events through transparent regions.
-// We track whether the pointer is over an interactive overlay element.
-// When it's not, the window is click-through so the operator can interact with
-// the desktop beneath.
-
-const interactiveEls = [
-  document.getElementById('window-chrome'),
-  document.getElementById('right-panel'),
-  document.getElementById('input-bar'),
-].filter(Boolean);
-
-let currentlyIgnoring = false;
-
-document.addEventListener('mousemove', (e) => {
-  const overInteractive = interactiveEls.some(el => el.contains(e.target) || el === e.target);
-  const shouldIgnore = !overInteractive;
-
-  if (shouldIgnore !== currentlyIgnoring) {
-    currentlyIgnoring = shouldIgnore;
-    window.vessel?.setIgnoreMouseEvents(shouldIgnore);
-  }
-});
+// The mac-first reference build is a focused app window, not a transparent
+// click-through overlay. Keep hit testing enabled across the whole stage.
+window.vessel?.setIgnoreMouseEvents(false);

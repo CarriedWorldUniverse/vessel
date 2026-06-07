@@ -3,15 +3,21 @@
 export const stageState = {
   // Per-aspect status: 'offline' | 'online' | 'speaking'
   aspects: {
-    forge:  { status: 'online' },
-    wren:   { status: 'online' },
-    harrow: { status: 'online' },
+    forge:  { status: 'offline' },
+    wren:   { status: 'offline' },
+    harrow: { status: 'offline' },
     maren:  { status: 'offline' },
-    verity: { status: 'online' },
-    keel:   { status: 'online' },
-    anvil:  { status: 'online' },
+    verity: { status: 'offline' },
+    keel:   { status: 'offline' },
+    anvil:  { status: 'offline' },
     plumb:  { status: 'offline' },
   },
+
+  rosterLoaded: false,
+
+  visibleAspects: [],
+  excludedAspects: ['dispatch', 'dispatch-controller', 'dispatch_controller', 'controller', 'operator'],
+  mutedAspects: [],
 
   // Which aspect is currently speaking (null = nobody)
   activeSpeaker: null,
@@ -22,8 +28,16 @@ export const stageState = {
 
   // Right panel content for the active speaker
   panelContent: null,
+  response: {
+    speaker: '',
+    spoken: '',
+    detail: '',
+  },
 
   lastMessageId: 0,
+
+  pendingTurns: [],
+  responseInbox: [],
 
   connection: {
     status: 'disconnected',
@@ -31,6 +45,16 @@ export const stageState = {
   },
 
   transcript: '',
+
+  inputMode: 'conversation',
+
+  speechSummaryMode: 'heuristic',
+
+  activity: {
+    status: 'idle',
+    label: 'Idle',
+    detail: '',
+  },
 };
 
 // Simple pub/sub for state changes
