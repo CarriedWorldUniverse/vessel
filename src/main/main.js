@@ -3,15 +3,21 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { spawn } = require('child_process');
+const { loadConfig, applyRuntimeEnv } = require('./config');
 const { NexusClient } = require('./nexus-client');
+const { TTSController } = require('./tts-client');
+const { UnderstandingClient } = require('./understanding-client');
 
 const isDev = process.argv.includes('--dev');
+const config = loadConfig();
+applyRuntimeEnv(config);
 
 app.setName('Vessel');
 
 let mainWindow = null;
 let nexus = null;
-let sayProcess = null;
+let tts = null;
+let understanding = null;
 
 function sendToRenderer(channel, payload) {
   if (!mainWindow || mainWindow.isDestroyed()) return;
@@ -24,38 +30,23 @@ function speechHelperPath() {
   return path.join(process.resourcesPath || '', 'native/macos/VesselSpeech');
 }
 
-function speak(text) {
-  const clean = String(text || '').trim();
-  if (!clean) return;
-  if (sayProcess) {
-    sayProcess.kill();
-    sayProcess = null;
-  }
-  sayProcess = spawn('say', [clean], { stdio: 'ignore' });
-  sayProcess.on('exit', () => {
-    sayProcess = null;
-    sendToRenderer('speech-speaking', false);
-  });
-  sendToRenderer('speech-speaking', true);
-}
-
 function createWindow() {
   const win = new BrowserWindow({
     width: 1400,
     height: 900,
     title: 'Vessel',
-    transparent: true,
+    transparent: false,
     frame: false,
-    alwaysOnTop: true,
+    alwaysOnTop: false,
     skipTaskbar: false,
     resizable: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      sandbox: false,
     },
-    // Windows: required for per-pixel transparency
-    backgroundColor: '#00000000',
+    backgroundColor: '#07070c',
   });
   mainWindow = win;
 
@@ -63,9 +54,11 @@ function createWindow() {
     onEvent: (event) => sendToRenderer('nexus-event', event),
     onStatus: (status) => sendToRenderer('nexus-status', status),
   });
+  tts = new TTSController({
+    onSpeaking: (speaking) => sendToRenderer('speech-speaking', speaking),
+  });
+  understanding = new UnderstandingClient(config.understanding || {});
 
-  // Click-through on transparent regions — set via setIgnoreMouseEvents with forward:true
-  // so the renderer can tell main when to enable/disable hit-testing
   win.setIgnoreMouseEvents(false);
 
   win.loadFile(path.join(__dirname, '../renderer/index.html'));
@@ -98,16 +91,31 @@ function createWindow() {
 
   ipcMain.handle('nexus-default-config', () => {
     return {
-      wsUrl: process.env.NEXUS_WS_URL || 'wss://dmonextreme.tail41686e.ts.net:7888',
-      token: process.env.NEXUS_TOKEN || '',
-      insecureTLS: process.env.NEXUS_INSECURE_TLS === '1' || !process.env.NEXUS_WS_URL,
+      wsUrl: config.nexus?.wsUrl || '',
+      token: config.nexus?.token || '',
+      insecureTLS: Boolean(config.nexus?.insecureTLS),
+      visibleAspects: (config.stage?.visibleAspects || []).join(','),
+      excludedAspects: (config.stage?.excludedAspects || []).join(','),
+      understanding: {
+        enabled: Boolean(config.understanding?.enabled),
+        reviewBeforeSend: config.understanding?.reviewBeforeSend !== false,
+        model: config.understanding?.model || '',
+        speechSummaryMode: config.understanding?.speechSummaryMode || 'heuristic',
+      },
     };
   });
 
-  ipcMain.handle('nexus-send', (_event, payload) => {
+  ipcMain.handle('nexus-send', async (_event, payload) => {
     try {
       const content = String(payload?.content || '').trim();
       if (!content) return { ok: false, error: 'message is empty' };
+      const target = String(payload?.target || '').trim().toLowerCase();
+      if (target) {
+        const mention = new RegExp(`^@${target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*`, 'i');
+        const cleanContent = content.replace(mention, '').trim() || content;
+        const msgId = await nexus.sayAspect(target, cleanContent);
+        return { ok: true, msgId };
+      }
       nexus.sendChat(content, Number(payload?.replyTo || 0));
       return { ok: true };
     } catch (err) {
@@ -148,8 +156,30 @@ function createWindow() {
     });
   });
 
-  ipcMain.handle('speech-say', (_event, text) => {
-    speak(text);
+  ipcMain.handle('speech-understand', async (_event, payload) => {
+    return understanding.clean({
+      text: payload?.text || '',
+      aspects: payload?.aspects || {},
+    });
+  });
+
+  ipcMain.handle('speech-summarize', async (_event, payload) => {
+    return understanding.summarizeForSpeech({
+      text: payload?.text || '',
+      speaker: payload?.speaker || '',
+    });
+  });
+
+  ipcMain.handle('speech-say', (_event, payload) => {
+    if (typeof payload === 'string') {
+      return tts.speak(payload);
+    } else {
+      return tts.speak(payload?.text, payload?.speaker);
+    }
+  });
+
+  ipcMain.handle('speech-stop', () => {
+    tts.stop();
     return { ok: true };
   });
 }
@@ -157,6 +187,7 @@ function createWindow() {
 app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
+  tts?.shutdown();
   app.quit();
 });
 

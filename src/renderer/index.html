@@ -20,22 +20,62 @@
   </div>
 
   <div id="right-panel" class="overlay-panel hidden">
-    <div id="right-panel-content"></div>
+    <div class="panel-header">
+      <div>
+        <div id="right-panel-speaker" class="panel-speaker">Response</div>
+        <div id="right-panel-state" class="panel-state">Waiting for speech output</div>
+      </div>
+    </div>
+    <section id="spoken-section" class="panel-section hidden">
+      <div class="panel-label">Spoken</div>
+      <div id="right-panel-spoken" class="panel-spoken"></div>
+    </section>
+    <section id="detail-section" class="panel-section hidden">
+      <div class="panel-label">Detail</div>
+      <div id="right-panel-detail" class="panel-detail"></div>
+    </section>
   </div>
 
   <div id="input-bar" class="overlay-bar">
-    <div class="status-row">
-      <span id="connection-dot" class="connection-dot"></span>
-      <span id="connection-label">Disconnected</span>
-      <button id="connect-nexus" class="small-button">Connect</button>
-      <button id="dictate-button" class="small-button">Dictate</button>
+    <div class="console-top">
+      <div class="status-row">
+        <span id="connection-dot" class="connection-dot"></span>
+        <span id="connection-label">Disconnected</span>
+        <span id="activity-pill" class="activity-pill" data-status="idle">Idle</span>
+      </div>
+      <div class="console-actions">
+        <div id="mode-tabs" class="mode-tabs" aria-label="Input mode">
+          <button class="mode-tab active" data-mode="conversation">Conversation</button>
+          <button class="mode-tab" data-mode="dictation">Dictation</button>
+        </div>
+        <button id="connect-nexus" class="small-button">Connect</button>
+        <button id="dictate-button" class="small-button primary">Dictate</button>
+        <button id="send-button" class="small-button">Send</button>
+        <button id="settings-toggle" class="small-button icon-button" title="Connection settings">...</button>
+      </div>
     </div>
-    <div class="config-row">
-      <input id="nexus-url" class="config-input" type="text" spellcheck="false" placeholder="wss://nexus-host:7888">
-      <input id="nexus-token" class="config-input token-input" type="password" spellcheck="false" placeholder="token optional">
-      <label class="config-check"><input id="nexus-insecure" type="checkbox"> self-signed</label>
+    <div class="console-grid">
+      <div class="left-console">
+        <div id="transcript-preview" class="transcript-preview hidden"></div>
+        <div id="pending-turns" class="pending-turns hidden"></div>
+        <div id="incoming-inbox" class="incoming-inbox hidden"></div>
+        <canvas id="input-waveform" class="input-waveform hidden" aria-hidden="true"></canvas>
+        <textarea id="input-field" placeholder="Speak or type to Nexus..." rows="1"></textarea>
+      </div>
+      <div class="right-console">
+        <div class="voice-row" aria-label="Voice checks">
+          <span class="voice-label">Room</span>
+          <div id="voice-agent-tabs" class="voice-agent-tabs">
+          </div>
+          <button id="voice-test-button" class="small-button">Play</button>
+        </div>
+        <div id="config-row" class="config-row hidden">
+          <input id="nexus-url" class="config-input" type="text" spellcheck="false" placeholder="wss://nexus-host:7888">
+          <input id="nexus-token" class="config-input token-input" type="password" spellcheck="false" placeholder="token optional">
+          <label class="config-check"><input id="nexus-insecure" type="checkbox"> self-signed</label>
+        </div>
+      </div>
     </div>
-    <textarea id="input-field" placeholder="Type or dictate to Nexus…" rows="1"></textarea>
   </div>
 
   <script type="module" src="scene.js"></script>

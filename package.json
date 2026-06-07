@@ -9,6 +9,7 @@
     "start": "npm run build:speech-helper && electron .",
     "dev": "npm run build:speech-helper && electron . --dev",
     "check": "node --check src/main/main.js && node --check src/main/preload.js && for f in src/renderer/*.js; do node --check \"$f\"; done",
+    "probe:nexus": "node scripts/nexus-probe.js",
     "sign:mac:adhoc": "find dist -maxdepth 2 -name '*.app' -exec codesign --force --deep --sign - {} \\;",
     "build:mac": "npm run build:speech-helper && electron-builder --mac --dir && npm run sign:mac:adhoc",
     "dist:mac": "npm run build:mac"
@@ -28,6 +29,7 @@
     "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "files": [
       "src/**/*",
+      "sidecars/**/*",
       "package.json"
     ],
     "extraResources": [

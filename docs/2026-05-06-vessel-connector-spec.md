@@ -127,6 +127,12 @@ export interface AspectMessage {
   /** Text content — may arrive in chunks for streaming responses */
   text: string;
 
+  /**
+   * Optional spoken form. If present, vessel sends this to TTS while rendering
+   * `text` or `meta.panelContent` as the full visual response.
+   */
+  speech?: string;
+
   /** true if this chunk completes the turn; false for streaming partials */
   done: boolean;
 
@@ -137,6 +143,13 @@ export interface AspectMessage {
   meta?: {
     /** If set, vessel renders this content in the right panel instead of deriving it from text */
     panelContent?: string;
+
+    /**
+     * Back-compat alias for `speech`. Connectors should prefer the top-level
+     * `speech` field; vessel may still accept `speech_text` on provider-native
+     * frames such as Nexus `chat.deliver`.
+     */
+    speech_text?: string;
 
     /** Aspect ID this message is addressing (drives gaze system) */
     addressingAspectId?: string;

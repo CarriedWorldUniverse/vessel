@@ -8,6 +8,8 @@
 
 Adds **Kokoro-82M** as a first-class **local, high-quality TTS engine** alongside Edge TTS (cloud) and Piper (local-basic). Sections changed: §13 (TTS pipeline — three-engine model + Kokoro rationale), §13.1 (selection logic), §13.2 (licensing — Kokoro is the clean-licensed commercial default candidate), §10.1 (config `tts.engine` values), §14 #11 (open question now has a leading resolution), §21.3 (bundle contents).
 
+Adds **VoxCPM** as the tunable agent-voice sidecar path for operator-controlled deployments. The mac reference build validated VoxCPM2 on dmonextreme alongside the resident Gemma service, using natural-language voice prompts for per-agent female and male voices. Kokoro remains the clean-licensed packaged default candidate; VoxCPM is the richer local tuning path when the operator has GPU capacity and accepts a sidecar service.
+
 Rationale: Kokoro-82M topped the TTS Arena leaderboard (Jan 2026, ahead of XTTS-v2), is **Apache-2.0** (clean for commercial distribution — directly addresses open question #11), is ~82M params / ~300MB, runs faster-than-real-time even on CPU, and exports to **ONNX** so it runs inside the Rust engine via the `ort` (onnxruntime) crate with **no Python runtime dependency** (honours §3 lock #1). Preset voices only — no cloning — which matches vessel's per-recipient-voice model.
 
 ## v0.2 changes (summary)
@@ -157,8 +159,8 @@ The container *engine* is the load-bearing process. The shell is deliberately th
 2. **Shell** captures mic audio (`cpal` or platform-native API), buffers to a WAV in memory.
 3. On key release, shell forwards the WAV to the **engine** over IPC.
 4. **Engine** runs STT (whisper.cpp by default) on the WAV → raw transcript.
-5. **Engine** runs cleanup-LLM pass → cleaned transcript (filler-word stripped, punctuation inserted, intent preserved per §12).
-6. **Engine** runs name detector on cleaned transcript → matches `<recipient>:` / `hey <recipient>` / `<recipient>,` / falls back to last-active.
+5. **Engine** optionally runs speech-understanding pass → cleaned transcript plus routing metadata (filler-word stripped, punctuation inserted, domain terms corrected, intent preserved per §12).
+6. **Engine** runs name detector on the cleaned transcript and/or model routing metadata → matches `<recipient>:` / `hey <recipient>` / `<recipient>,` / falls back to last-active.
 7. **Engine** dispatches `(recipient, cleaned_message)` to the configured ChatSource adapter via `send()`.
 8. Adapter delivers to backend; response stream begins.
 
@@ -504,11 +506,14 @@ stt:
   engine: "whisper-cpp"   # or "whisperkit-mac" (Phase 6+), "onnx-directml" (Phase 6+)
   model: "base.en"        # whisper.cpp model name; downloaded on first run if missing
   push_to_talk_hotkey: "Ctrl+Space"  # global hotkey; see §10.6
-  cleanup_llm:
+  understanding:
     enabled: true
-    provider: "claude-haiku"   # or "openai-mini", "local-phi", "off"
-    secret_ref: "vessel.cleanup.token"
-    offline_fallback: "local-phi"  # used if cleanup provider unreachable; "off" = no cleanup offline
+    provider: "openai-compatible"  # openai-compatible | anthropic | off
+    base_url: "http://dmonextreme.tail41686e.ts.net:30434/v1"
+    model: "gemma-4-12b"           # operator-chosen local or cloud model id
+    secret_ref: ""                 # optional; empty for local no-auth servers
+    offline_fallback: "off"        # used if understanding provider unreachable
+    review_before_send: true
 
 tts:
   engine: "edge-tts"        # "edge-tts" (cloud) | "kokoro" (local, high-quality) | "piper" (local, basic)
@@ -841,9 +846,9 @@ The original v0.1 plan ordered phases as: Tauri shell + VRM render → ChatSourc
 
 (Superseded by v0.2 Phase 6+ above; original list retained: two-VRM slots, full ensemble, spatial audio, VAD, adapter testing rounds, commissioned VRMs, public commercial release.)
 
-## 12. STT pipeline
+## 12. STT and speech understanding pipeline
 
-**Two stages: STT engine + cleanup-LLM pass.** The cleanup pass is the felt-quality moat.
+**Two stages: STT engine + speech-understanding pass.** The second pass is the felt-quality moat.
 
 **Stage 1 — STT engine.** `whisper-rs` (binding to whisper.cpp) is the cross-platform default. Exposed behind an `STTEngine` trait so per-platform accelerators (WhisperKit on macOS via Tauri sidecar, ONNX+DirectML on Windows) can drop in as Phase 6+ optimisations. Cross-platform-as-default is a hard product constraint; Apple-Silicon-only paths are not viable as the primary engine.
 
@@ -851,7 +856,24 @@ Push-to-talk batches a complete WAV. Record from key-press to key-release into a
 
 Model: `base.en` at v1 (~140MB, real-time-capable on modern CPUs). Configurable to larger models for accuracy tradeoff.
 
-**Stage 2 — cleanup-LLM pass.** Raw Whisper transcripts are accurate but messy: filler words ("um", "uh"), missing punctuation, occasional homophone errors. A small LLM call (Claude Haiku, or a local small model like Llama 3.x small / Phi-mini for offline use) cleans the transcript while preserving intent. Prompt: "Clean this dictated text for sending. Preserve the user's intent and tone exactly. Fix punctuation, remove filler words, fix obvious whisper transcription errors. Do not rewrite, summarise, or change meaning." Output replaces the raw transcript before it reaches the ChatSource adapter.
+**Stage 2 — speech-understanding pass.** Raw Whisper transcripts are accurate but messy: filler words ("um", "uh"), missing punctuation, occasional homophone errors, and domain-specific terms. A small LLM call cleans the transcript while preserving intent and can emit structured routing metadata for attention phrases. The backend is configurable: local OpenAI-compatible servers (Ollama, llama-server, LM Studio, vLLM), cloud OpenAI-compatible APIs, Anthropic-compatible wrappers, or `off`. For the dmonextreme deployment, the expected configuration is an OpenAI-compatible endpoint running the operator's chosen Gemma-class model, e.g. `gemma-4-12b` as named by Ollama/llama-server.
+
+Prompt: "Clean this dictated text for sending. Preserve the user's intent and tone exactly. Fix punctuation, remove filler words, fix obvious transcription errors, and extract the addressed recipient when present. Do not rewrite, summarise, add facts, or change meaning."
+
+Structured output:
+
+```json
+{
+  "cleaned_text": "can you get me the result for today?",
+  "target": "shadow",
+  "confidence": 0.86,
+  "corrections": [
+    { "from": "plum", "to": "plumb" }
+  ]
+}
+```
+
+If confidence is low, Vessel keeps the cleaned text editable and does not auto-send. `review_before_send: true` is recommended until a user's accent, microphone, and domain vocabulary are calibrated.
 
 This is the differentiator vs. tools like Glaido — Glaido's moat is the cleanup pass, not the underlying STT. Vessel matches by doing the same.
 
@@ -859,22 +881,24 @@ This is the differentiator vs. tools like Glaido — Glaido's moat is the cleanu
 
 ## 13. TTS pipeline
 
-Vessel supports **three TTS engines** spanning a cloud-quality / local-quality / local-basic spectrum. Per-deployment, one is `engine` (primary) and one is `fallback_engine`; the selection logic in §13.1 governs runtime choice.
+Vessel supports multiple TTS engines spanning a cloud-quality / local-tunable / local-packaged / local-basic spectrum. Per-deployment, one is `engine` (primary) and one is `fallback_engine`; the selection logic in §13.1 governs runtime choice.
 
 **Edge TTS (cloud).** MS Cognitive Services Edge TTS is free, fast, ~30+ English voices with personality variation, via a Node websocket reimplementation from the Python `edge-tts` library reference (~200 LOC). Token-rotation behaviour (Python `edge-tts` refreshes tokens per-session) is an assumption to validate at spike time. **Highest voice variety, but a commercial-licensing grey area** (§13.2) and requires network.
 
 **Kokoro-82M (local, high-quality).** Open-weight 82M-parameter TTS model (~300MB), **Apache-2.0** licensed. Topped the TTS Arena leaderboard in Jan 2026, ahead of XTTS-v2, at a fraction of the size. Runs **faster than real-time even on CPU** (well above real-time on any GPU), so it comfortably fits the §18 per-sentence TTS budget on both the high-end (RTX-class) and modest (laptop CPU / Apple Silicon) targets. Ships as **ONNX** and runs inside the engine via the `ort` (onnxruntime) crate — **no Python runtime dependency**, honouring §3 lock #1 (the Python `kokoro` reference impl is *not* used at runtime). Preset named voices only (no cloning); curated into the §13.3 catalog. This is the recommended **local default for commercial builds** — it gives near-Edge-TTS quality with a clean licence (§13.2).
 
+**VoxCPM (local, tunable sidecar).** OpenBMB VoxCPM2 provides higher-quality local TTS with natural-language voice prompting and future reference-audio tuning. It runs as a supervised sidecar or a k3s service, not inside the shell. In the Carried World deployment it can run on dmonextreme beside Gemma: Gemma remains the summarizer/judge/base agent model, while VoxCPM owns spoken voice synthesis. VoxCPM is the recommended path for matching distinct agent identities such as Shadow, Anvil, and Plumb when GPU headroom exists.
+
 **Piper (local, basic).** Lightweight local TTS, no internet dependency, smallest footprint. Lower quality than Kokoro or Edge TTS but extremely cheap and battle-tested. Retained as the **minimal offline fallback** and for the most constrained hardware. Runs as engine subprocess.
 
-Per-recipient voice = config field. Voice IDs are drawn from the configured engine's catalogue (e.g. `en-GB-RyanNeural` / `en-US-DavisNeural` for Edge TTS; Kokoro's named voices such as `af_*` / `am_*` / `bf_*` / `bm_*`); users map per recipient to fit personality. Vessel's curated catalog (§13.3) maps a friendly display name onto the right per-engine ID so switching engines doesn't strand recipient config.
+Per-recipient voice = config field plus optional voice profile. Voice IDs are drawn from the configured engine's catalogue (e.g. `en-GB-RyanNeural` / `en-US-DavisNeural` for Edge TTS; Kokoro's named voices such as `af_*` / `am_*` / `bf_*` / `bm_*`). Tunable engines such as VoxCPM also accept a voice prompt that describes audible identity: gender or androgyny, age impression, accent, pace, warmth, authority, and emotional range. Users map per recipient to fit personality. Vessel's curated catalog (§13.3) maps a friendly display name onto the right per-engine ID so switching engines doesn't strand recipient config.
 
 ### 13.1 TTS engine selection logic
 
 Decision tree, executed per sentence. The configured `engine` is the primary and `fallback_engine` is the backstop; the rules degrade from cloud → local-high-quality → local-basic:
 
 1. If the primary engine is `edge-tts` and the user is **offline or Edge TTS is unreachable** → use the configured `fallback_engine` (Kokoro if configured, else Piper) for *this sentence only* (don't poison subsequent sentences); log the fallback for telemetry / status indicator.
-2. If the primary engine is configured and available → use it (Edge TTS / Kokoro / Piper as configured).
+2. If the primary engine is configured and available → use it (Edge TTS / VoxCPM / Kokoro / Piper as configured).
 3. If the primary engine errors or rate-limits → fall back to `fallback_engine` for *this sentence only*; log the fallback.
 4. If the fallback is **also** unavailable (model file missing, subprocess crash, ONNX load failure) → engine emits a `tts.unavailable` IPC frame; shell renders text-only response with a "voice unavailable" indicator.
 
@@ -901,6 +925,31 @@ This is an open product/legal question, not just a technical one, but Kokoro sub
 Vessel ships with a curated default voice list (10–15 voices spanning accent / pitch / personality), each tagged with its per-engine upstream voice ID(s) and a vessel-friendly display name ("Warm British Female", "Calm American Male"). Where a display name has a close match across engines (e.g. an Edge TTS voice and a Kokoro voice of similar character), the catalog entry records both IDs so a recipient's chosen voice survives an engine switch. Users can override with any Edge TTS, Kokoro, or Piper voice ID via settings.
 
 Voice catalog updates ride along with vessel version updates (§10.7) — the catalog is bundled, not fetched at runtime.
+
+### 13.4 Agent Voice Profiles
+
+Agent voices are part of identity. A voice profile is stable per recipient and separate from the agent's system prompt: it describes how the answer should sound, not what the agent should think.
+
+```yaml
+aspects:
+  shadow:
+    voice_profile:
+      gender: female
+      style: composed orchestrator
+      prompt: "composed female orchestrator, warm but precise, measured pace, clear New Zealand English"
+  anvil:
+    voice_profile:
+      gender: male
+      style: grounded builder
+      prompt: "grounded male builder, low confident voice, practical cadence, concise delivery"
+  plumb:
+    voice_profile:
+      gender: male
+      style: collaborative builder
+      prompt: "friendly male builder, lighter voice than Anvil, quick collaborative cadence"
+```
+
+For catalogue engines, Vessel resolves the profile to the closest available preset voice. For tunable engines such as VoxCPM, Vessel sends the `prompt` as the synthesis style instruction. Future reference-audio support can attach a local file to the same profile without changing the agent routing model.
 
 ## 14. Open questions
 
