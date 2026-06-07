@@ -12,6 +12,8 @@ import io
 import os
 
 import torch
+import re
+import numpy as np
 from contextlib import asynccontextmanager
 from functools import lru_cache
 
@@ -48,22 +50,71 @@ def load_model(model_id: str):
     )
 
 
+def _chunk_text(text: str, max_chars: int):
+    """Split text into <= max_chars sentence-level chunks.
+
+    VoxCPM2's LM cache is 4096 tokens, shared between the input text and the
+    generated audio tokens (audio is capped ~2000 and dominates). A long
+    utterance overflows that cache and triggers a CUDA device-side assert
+    (index out of bounds) that poisons the whole process. Synthesizing in
+    sentence-level chunks keeps every call well within the cache.
+    """
+    text = text.strip()
+    if not text:
+        return []
+    if len(text) <= max_chars:
+        return [text]
+    parts = re.split(r"(?<=[.!?])\s+|\n+", text)
+    chunks = []
+    cur = ""
+    for part in parts:
+        part = part.strip()
+        if not part:
+            continue
+        while len(part) > max_chars:  # a single over-long sentence: hard-split
+            cut = part.rfind(" ", 0, max_chars)
+            cut = cut if cut > 0 else max_chars
+            chunks.append(part[:cut].strip())
+            part = part[cut:].strip()
+        if not cur:
+            cur = part
+        elif len(cur) + 1 + len(part) <= max_chars:
+            cur += " " + part
+        else:
+            chunks.append(cur)
+            cur = part
+    if cur:
+        chunks.append(cur)
+    return [c for c in chunks if c]
+
+
 def synthesize(text: str, model_id: str):
     model = load_model(model_id)
-    with torch.inference_mode():
-        wav = model.generate(
-            text=text,
-            cfg_value=float(os.getenv("VESSEL_VOXCPM_CFG_VALUE", "2.0")),
-            inference_timesteps=int(os.getenv("VESSEL_VOXCPM_INFERENCE_TIMESTEPS", "10")),
-        )
-    # Release the per-request CUDA cache so VRAM does not creep over time:
-    # VoxCPM2 crept ~6.5GB -> 16GB over a day of use without this (the cached
-    # allocator holds freed blocks). inference_mode also avoids any autograd
-    # graph during generation.
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache()
     sample_rate = getattr(model.tts_model, "sample_rate", 48000)
-    return wav, sample_rate
+    # Guard against VoxCPM2's 4096-token LM cache: synthesize in sentence-level
+    # chunks so a long utterance cannot overflow it and poison the CUDA context.
+    max_chars = int(os.getenv("VESSEL_VOXCPM_MAX_CHARS", "300"))
+    cfg_value = float(os.getenv("VESSEL_VOXCPM_CFG_VALUE", "2.0"))
+    timesteps = int(os.getenv("VESSEL_VOXCPM_INFERENCE_TIMESTEPS", "10"))
+    wavs = []
+    for chunk in _chunk_text(text, max_chars):
+        with torch.inference_mode():
+            wavs.append(model.generate(text=chunk, cfg_value=cfg_value, inference_timesteps=timesteps))
+        # Release the per-request CUDA cache so VRAM does not creep (the cached
+        # allocator otherwise holds freed blocks).
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+    if not wavs:
+        return np.zeros(0, dtype="float32"), sample_rate
+    if len(wavs) == 1:
+        return wavs[0], sample_rate
+    gap = np.zeros(int(sample_rate * 0.15), dtype=wavs[0].dtype)  # brief pause between chunks
+    joined = []
+    for i, w in enumerate(wavs):
+        if i:
+            joined.append(gap)
+        joined.append(w)
+    return np.concatenate(joined), sample_rate
 
 
 def warmup() -> None:
