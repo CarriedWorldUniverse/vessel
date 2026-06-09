@@ -131,6 +131,9 @@ private struct SettingsPanel: View {
     @State private var token = ""
     @State private var allowInsecureTLS = true
     @State private var audioOutputPolicy = AudioOutputPolicy.automatic
+    @State private var ttsProvider = TTSProvider.automatic
+    @State private var ttsBaseURLString = ""
+    @State private var ttsModel = ""
     @State private var configError: String?
 
     var body: some View {
@@ -173,6 +176,21 @@ private struct SettingsPanel: View {
                             Text(policy.rawValue).tag(policy)
                         }
                     }
+
+                    Picker("TTS", selection: $ttsProvider) {
+                        ForEach(TTSProvider.allCases) { provider in
+                            Text(provider.rawValue).tag(provider)
+                        }
+                    }
+
+                    TextField("TTS URL", text: $ttsBaseURLString)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .keyboardType(.URL)
+
+                    TextField("TTS model", text: $ttsModel)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
                 }
 
                 Section("Aspect") {
@@ -200,6 +218,9 @@ private struct SettingsPanel: View {
                 token = store.config.token
                 allowInsecureTLS = store.config.allowInsecureTLS
                 audioOutputPolicy = store.config.audioOutputPolicy
+                ttsProvider = store.config.ttsProvider
+                ttsBaseURLString = store.config.ttsBaseURL.absoluteString
+                ttsModel = store.config.ttsModel
             }
         }
     }
@@ -222,9 +243,12 @@ private struct SettingsPanel: View {
             nexusURLString: nexusURLString,
             token: token,
             allowInsecureTLS: allowInsecureTLS,
-            audioOutputPolicy: audioOutputPolicy
+            audioOutputPolicy: audioOutputPolicy,
+            ttsProvider: ttsProvider,
+            ttsBaseURLString: ttsBaseURLString,
+            ttsModel: ttsModel
         ) else {
-            configError = "Enter a valid Nexus URL."
+            configError = "Enter valid Nexus and TTS URLs."
             return
         }
 

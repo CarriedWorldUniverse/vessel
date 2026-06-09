@@ -28,6 +28,11 @@
 	<string>Vessel uses speech recognition to transcribe your prompt.</string>
 	<key>NSSupportsLiveActivities</key>
 	<false/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

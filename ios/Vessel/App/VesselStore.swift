@@ -85,16 +85,25 @@ final class VesselStore: ObservableObject {
         nexusURLString: String,
         token: String,
         allowInsecureTLS: Bool,
-        audioOutputPolicy: AudioOutputPolicy
+        audioOutputPolicy: AudioOutputPolicy,
+        ttsProvider: TTSProvider,
+        ttsBaseURLString: String,
+        ttsModel: String
     ) -> Bool {
-        guard let url = URL(string: nexusURLString.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+        guard
+            let url = URL(string: nexusURLString.trimmingCharacters(in: .whitespacesAndNewlines)),
+            let ttsBaseURL = URL(string: ttsBaseURLString.trimmingCharacters(in: .whitespacesAndNewlines))
+        else {
             return false
         }
         config = VesselConfig(
             nexusURL: url,
             token: token.trimmingCharacters(in: .whitespacesAndNewlines),
             allowInsecureTLS: allowInsecureTLS,
-            audioOutputPolicy: audioOutputPolicy
+            audioOutputPolicy: audioOutputPolicy,
+            ttsProvider: ttsProvider,
+            ttsBaseURL: ttsBaseURL,
+            ttsModel: ttsModel.trimmingCharacters(in: .whitespacesAndNewlines)
         )
         return true
     }
@@ -230,7 +239,7 @@ final class VesselStore: ObservableObject {
         var next = inbox.remove(at: nextIndex)
         next.spoken = true
         activeResponse = next
-        speaker.speak(next.speech, aspectId: next.aspectId, audioOutputPolicy: config.audioOutputPolicy)
+        speaker.speak(next.speech, aspectId: next.aspectId, config: config)
     }
 
     private func loadPreviewRosterIfEmpty() {

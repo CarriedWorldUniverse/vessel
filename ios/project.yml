@@ -48,4 +48,6 @@ targets:
           - UIInterfaceOrientationPortraitUpsideDown
         NSMicrophoneUsageDescription: Vessel uses the microphone to capture your spoken prompt.
         NSSpeechRecognitionUsageDescription: Vessel uses speech recognition to transcribe your prompt.
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
         NSSupportsLiveActivities: false
