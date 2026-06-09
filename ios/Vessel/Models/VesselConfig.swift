@@ -8,6 +8,6 @@ struct VesselConfig: Equatable {
     static let `default` = VesselConfig(
         nexusURL: URL(string: "wss://nexus.tail41686e.ts.net:7888/connect")!,
         token: "",
-        allowInsecureTLS: false
+        allowInsecureTLS: true
     )
 }

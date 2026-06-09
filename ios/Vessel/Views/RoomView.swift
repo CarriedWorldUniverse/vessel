@@ -180,7 +180,7 @@ private struct InputDock: View {
             }
             .pickerStyle(.segmented)
 
-            Waveform(level: store.audioLevel)
+            Waveform(level: store.audioLevel, isActive: store.isListening)
                 .frame(height: 34)
 
             TextEditor(text: Binding(
@@ -220,9 +220,10 @@ private struct InputDock: View {
 
 private struct Waveform: View {
     let level: Float
+    let isActive: Bool
 
     var body: some View {
-        TimelineView(.animation) { context in
+        TimelineView(.periodic(from: .now, by: isActive ? 0.05 : 1.0)) { context in
             Canvas { canvas, size in
                 let now = context.date.timeIntervalSinceReferenceDate
                 let path = wavePath(size: size, phase: now)

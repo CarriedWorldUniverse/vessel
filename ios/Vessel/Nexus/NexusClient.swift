@@ -7,43 +7,123 @@ enum NexusEvent {
     case message(ResponseItem)
 }
 
-final class NexusClient {
+final class NexusClient: NSObject, URLSessionDelegate {
     private var task: URLSessionWebSocketTask?
+    private var session: URLSession?
     private var eventHandler: ((NexusEvent) -> Void)?
+    private var config: VesselConfig?
+    private var manualDisconnect = false
+    private var reconnectAttempt = 0
+    private var heartbeatTask: Task<Void, Never>?
 
     func connect(config: VesselConfig, onEvent: @escaping (NexusEvent) -> Void) async throws {
+        disconnect(notify: false)
+        self.config = config
         eventHandler = onEvent
+        manualDisconnect = false
 
-        var request = URLRequest(url: config.nexusURL)
+        var request = URLRequest(url: websocketURL(config))
+        request.timeoutInterval = 15
         if !config.token.isEmpty {
             request.setValue("Bearer \(config.token)", forHTTPHeaderField: "Authorization")
         }
 
-        let session = URLSession(configuration: .default)
+        let session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
+        self.session = session
         let task = session.webSocketTask(with: request)
         self.task = task
         task.resume()
         onEvent(.connected)
+        reconnectAttempt = 0
+        startHeartbeat()
+        try await sendFrame(kind: "roster.list", payload: [:])
+        try await sendFrame(kind: "subscribe.chat", payload: [:])
+        try await sendFrame(kind: "subscribe.roster", payload: [:])
         receiveLoop()
     }
 
     func disconnect() {
+        disconnect(notify: true)
+    }
+
+    private func disconnect(notify: Bool) {
+        manualDisconnect = true
+        heartbeatTask?.cancel()
+        heartbeatTask = nil
         task?.cancel(with: .goingAway, reason: nil)
         task = nil
-        eventHandler?(.disconnected(""))
+        session?.invalidateAndCancel()
+        session = nil
+        if notify {
+            eventHandler?(.disconnected(""))
+        }
     }
 
     func sendUserMessage(text: String, targetAspectId: String?, inputMode: String) async throws {
         guard let task else {
             throw NexusClientError.notConnected
         }
-        let payload: [String: Any] = [
-            "text": text,
-            "to": targetAspectId ?? NSNull(),
-            "input_mode": inputMode
-        ]
+        if let targetAspectId {
+            try await sendFrame(
+                kind: "aspect.say",
+                payload: [
+                    "aspect": targetAspectId,
+                    "content": text,
+                    "input_mode": inputMode
+                ],
+                task: task
+            )
+        } else {
+            try await sendFrame(
+                kind: "chat.send",
+                payload: [
+                    "from": "operator",
+                    "content": text,
+                    "input_mode": inputMode
+                ],
+                task: task
+            )
+        }
+    }
+
+    func urlSession(
+        _ session: URLSession,
+        didReceive challenge: URLAuthenticationChallenge,
+        completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
+    ) {
+        guard config?.allowInsecureTLS == true,
+              challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
+              let trust = challenge.protectionSpace.serverTrust
+        else {
+            completionHandler(.performDefaultHandling, nil)
+            return
+        }
+
+        completionHandler(.useCredential, URLCredential(trust: trust))
+    }
+
+    private func websocketURL(_ config: VesselConfig) -> URL {
+        var components = URLComponents(url: config.nexusURL, resolvingAgainstBaseURL: false)
+        if components?.path.isEmpty == true || components?.path == "/" {
+            components?.path = "/connect"
+        }
+        if !config.token.isEmpty {
+            var items = components?.queryItems ?? []
+            items.removeAll { $0.name == "token" }
+            items.append(URLQueryItem(name: "token", value: config.token))
+            components?.queryItems = items
+        }
+        return components?.url ?? config.nexusURL
+    }
+
+    private func sendFrame(kind: String, payload: [String: Any], task explicitTask: URLSessionWebSocketTask? = nil) async throws {
+        guard let task = explicitTask ?? task else {
+            throw NexusClientError.notConnected
+        }
         let envelope: [String: Any] = [
-            "kind": targetAspectId == nil ? "chat.send" : "aspect.say",
+            "kind": kind,
+            "id": UUID().uuidString,
+            "ts": ISO8601DateFormatter().string(from: Date()),
             "payload": payload
         ]
         let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
@@ -62,7 +142,42 @@ final class NexusClient {
                 self.handle(message)
                 self.receiveLoop()
             case .failure(let error):
-                self.eventHandler?(.disconnected(error.localizedDescription))
+                self.handleDisconnect(error.localizedDescription)
+            }
+        }
+    }
+
+    private func startHeartbeat() {
+        heartbeatTask?.cancel()
+        heartbeatTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 15_000_000_000)
+                guard let self, !Task.isCancelled else { return }
+                self.task?.sendPing { error in
+                    if let error {
+                        self.handleDisconnect(error.localizedDescription)
+                    }
+                }
+            }
+        }
+    }
+
+    private func handleDisconnect(_ reason: String) {
+        task = nil
+        heartbeatTask?.cancel()
+        heartbeatTask = nil
+        eventHandler?(.disconnected(reason))
+        guard !manualDisconnect, let config, let eventHandler else { return }
+
+        reconnectAttempt += 1
+        let delay = min(pow(2.0, Double(reconnectAttempt - 1)), 30.0)
+        Task {
+            try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+            guard !manualDisconnect else { return }
+            do {
+                try await connect(config: config, onEvent: eventHandler)
+            } catch {
+                handleDisconnect(error.localizedDescription)
             }
         }
     }

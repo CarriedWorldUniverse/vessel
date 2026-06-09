@@ -33,9 +33,13 @@ final class VesselStore: ObservableObject {
     private let speaker = SpeechSpeaker()
     private lazy var speechRecognizer = SpeechRecognizer()
     private lazy var nexus = NexusClient()
+    private var didAutoConnect = false
 
     func bootstrap() async {
         loadPreviewRosterIfEmpty()
+        guard !didAutoConnect else { return }
+        didAutoConnect = true
+        await connect()
     }
 
     func connect() async {
