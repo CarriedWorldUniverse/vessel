@@ -130,6 +130,7 @@ private struct SettingsPanel: View {
     @State private var nexusURLString = ""
     @State private var token = ""
     @State private var allowInsecureTLS = true
+    @State private var audioOutputPolicy = AudioOutputPolicy.automatic
     @State private var configError: String?
 
     var body: some View {
@@ -166,6 +167,14 @@ private struct SettingsPanel: View {
                     }
                 }
 
+                Section("Audio") {
+                    Picker("Output", selection: $audioOutputPolicy) {
+                        ForEach(AudioOutputPolicy.allCases) { policy in
+                            Text(policy.rawValue).tag(policy)
+                        }
+                    }
+                }
+
                 Section("Aspect") {
                     if store.aspects.isEmpty {
                         Text("No aspects online.")
@@ -190,6 +199,7 @@ private struct SettingsPanel: View {
                 nexusURLString = store.config.nexusURL.absoluteString
                 token = store.config.token
                 allowInsecureTLS = store.config.allowInsecureTLS
+                audioOutputPolicy = store.config.audioOutputPolicy
             }
         }
     }
@@ -211,7 +221,8 @@ private struct SettingsPanel: View {
         guard store.updateConfig(
             nexusURLString: nexusURLString,
             token: token,
-            allowInsecureTLS: allowInsecureTLS
+            allowInsecureTLS: allowInsecureTLS,
+            audioOutputPolicy: audioOutputPolicy
         ) else {
             configError = "Enter a valid Nexus URL."
             return

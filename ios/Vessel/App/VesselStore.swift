@@ -81,14 +81,20 @@ final class VesselStore: ObservableObject {
         connectionState = .disconnected
     }
 
-    func updateConfig(nexusURLString: String, token: String, allowInsecureTLS: Bool) -> Bool {
+    func updateConfig(
+        nexusURLString: String,
+        token: String,
+        allowInsecureTLS: Bool,
+        audioOutputPolicy: AudioOutputPolicy
+    ) -> Bool {
         guard let url = URL(string: nexusURLString.trimmingCharacters(in: .whitespacesAndNewlines)) else {
             return false
         }
         config = VesselConfig(
             nexusURL: url,
             token: token.trimmingCharacters(in: .whitespacesAndNewlines),
-            allowInsecureTLS: allowInsecureTLS
+            allowInsecureTLS: allowInsecureTLS,
+            audioOutputPolicy: audioOutputPolicy
         )
         return true
     }
@@ -224,7 +230,7 @@ final class VesselStore: ObservableObject {
         var next = inbox.remove(at: nextIndex)
         next.spoken = true
         activeResponse = next
-        speaker.speak(next.speech, aspectId: next.aspectId)
+        speaker.speak(next.speech, aspectId: next.aspectId, audioOutputPolicy: config.audioOutputPolicy)
     }
 
     private func loadPreviewRosterIfEmpty() {
