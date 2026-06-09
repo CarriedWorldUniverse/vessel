@@ -61,6 +61,18 @@ final class VesselStore: ObservableObject {
         connectionState = .disconnected
     }
 
+    func updateConfig(nexusURLString: String, token: String, allowInsecureTLS: Bool) -> Bool {
+        guard let url = URL(string: nexusURLString.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+            return false
+        }
+        config = VesselConfig(
+            nexusURL: url,
+            token: token.trimmingCharacters(in: .whitespacesAndNewlines),
+            allowInsecureTLS: allowInsecureTLS
+        )
+        return true
+    }
+
     func toggleMute(_ aspect: Aspect) {
         guard let index = aspects.firstIndex(where: { $0.id == aspect.id }) else {
             return

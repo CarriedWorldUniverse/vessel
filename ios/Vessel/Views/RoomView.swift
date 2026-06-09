@@ -2,6 +2,7 @@ import SwiftUI
 
 struct RoomView: View {
     @EnvironmentObject private var store: VesselStore
+    @State private var isShowingSettings = false
 
     var body: some View {
         NavigationStack {
@@ -13,10 +14,6 @@ struct RoomView: View {
                 ResponsePanel()
                     .padding(16)
 
-                AspectRoster()
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 12)
-
                 InputDock()
                     .padding(16)
                     .background(.regularMaterial)
@@ -26,14 +23,16 @@ struct RoomView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        Task {
-                            await store.connect()
-                        }
+                        isShowingSettings = true
                     } label: {
-                        Image(systemName: "bolt.horizontal")
+                        Image(systemName: "slider.horizontal.3")
                     }
-                    .accessibilityLabel("Connect")
+                    .accessibilityLabel("Settings")
                 }
+            }
+            .sheet(isPresented: $isShowingSettings) {
+                SettingsPanel()
+                    .environmentObject(store)
             }
         }
     }
@@ -122,6 +121,151 @@ private struct AspectRoster: View {
                 }
             }
         }
+    }
+}
+
+private struct SettingsPanel: View {
+    @EnvironmentObject private var store: VesselStore
+    @Environment(\.dismiss) private var dismiss
+    @State private var nexusURLString = ""
+    @State private var token = ""
+    @State private var allowInsecureTLS = true
+    @State private var configError: String?
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Connection") {
+                    LabeledContent("Status", value: statusText)
+
+                    TextField("Nexus URL", text: $nexusURLString)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .keyboardType(.URL)
+
+                    SecureField("Token", text: $token)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+
+                    Toggle("Allow self-signed TLS", isOn: $allowInsecureTLS)
+
+                    if let configError {
+                        Text(configError)
+                            .font(.footnote)
+                            .foregroundStyle(.red)
+                    }
+
+                    HStack {
+                        Button("Connect") {
+                            saveAndConnect()
+                        }
+                        Spacer()
+                        Button("Disconnect", role: .destructive) {
+                            store.disconnect()
+                        }
+                    }
+                }
+
+                Section("Aspect") {
+                    if store.aspects.isEmpty {
+                        Text("No aspects online.")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(store.aspects) { aspect in
+                            AspectSettingsRow(aspect: aspect)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Vessel")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+            .onAppear {
+                nexusURLString = store.config.nexusURL.absoluteString
+                token = store.config.token
+                allowInsecureTLS = store.config.allowInsecureTLS
+            }
+        }
+    }
+
+    private var statusText: String {
+        switch store.connectionState {
+        case .disconnected:
+            return "Disconnected"
+        case .connecting:
+            return "Connecting"
+        case .connected:
+            return "Connected"
+        case .failed(let reason):
+            return reason
+        }
+    }
+
+    private func saveAndConnect() {
+        guard store.updateConfig(
+            nexusURLString: nexusURLString,
+            token: token,
+            allowInsecureTLS: allowInsecureTLS
+        ) else {
+            configError = "Enter a valid Nexus URL."
+            return
+        }
+
+        configError = nil
+        Task {
+            await store.connect()
+        }
+    }
+}
+
+private struct AspectSettingsRow: View {
+    @EnvironmentObject private var store: VesselStore
+    let aspect: Aspect
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Button {
+                store.focus(aspect)
+            } label: {
+                HStack(spacing: 10) {
+                    Circle()
+                        .fill(color)
+                        .frame(width: 10, height: 10)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(aspect.displayName)
+                        Text(aspect.isOnline ? "Online" : "Offline")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .buttonStyle(.plain)
+
+            Spacer()
+
+            if aspect.id == store.activeAspectId {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(.tint)
+            }
+
+            Button {
+                store.toggleMute(aspect)
+            } label: {
+                Image(systemName: aspect.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+            }
+            .buttonStyle(.borderless)
+            .accessibilityLabel(aspect.isMuted ? "Unmute" : "Mute")
+        }
+    }
+
+    private var color: Color {
+        Color(hex: aspect.colorHex) ?? .accentColor
     }
 }
 
