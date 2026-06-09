@@ -37,13 +37,14 @@ final class NexusClient {
         guard let task else {
             throw NexusClientError.notConnected
         }
+        let payload: [String: Any] = [
+            "text": text,
+            "to": targetAspectId ?? NSNull(),
+            "input_mode": inputMode
+        ]
         let envelope: [String: Any] = [
             "kind": targetAspectId == nil ? "chat.send" : "aspect.say",
-            "payload": [
-                "text": text,
-                "to": targetAspectId ?? NSNull(),
-                "input_mode": inputMode
-            ]
+            "payload": payload
         ]
         let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
         guard let raw = String(data: data, encoding: .utf8) else {

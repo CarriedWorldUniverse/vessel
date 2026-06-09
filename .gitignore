@@ -34,6 +34,10 @@ desktop.ini
 *.swo
 .cursor/
 
+# Xcode user state
+xcuserdata/
+*.xcuserstate
+
 # Credentials / config
 .env
 .env.local

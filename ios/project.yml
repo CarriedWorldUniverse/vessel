@@ -10,6 +10,9 @@ settings:
     CURRENT_PROJECT_VERSION: "1"
     SWIFT_VERSION: "5.0"
     IPHONEOS_DEPLOYMENT_TARGET: "18.0"
+    DEVELOPMENT_TEAM: N3947T7ZTP
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    STRING_CATALOG_GENERATE_SYMBOLS: YES
 targets:
   Vessel:
     type: application
@@ -22,16 +25,27 @@ targets:
         PRODUCT_NAME: Vessel
         INFOPLIST_FILE: Vessel/Resources/Info.plist
         CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: Apple Development
+        PROVISIONING_PROFILE_SPECIFIER: ""
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     info:
       path: Vessel/Resources/Info.plist
       properties:
-        CFBundleDisplayName: Vessel
+        CFBundleDisplayName: Carried World - Vessel
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        LSApplicationCategoryType: public.app-category.developer-tools
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
         UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
         NSMicrophoneUsageDescription: Vessel uses the microphone to capture your spoken prompt.
         NSSpeechRecognitionUsageDescription: Vessel uses speech recognition to transcribe your prompt.
         NSSupportsLiveActivities: false
