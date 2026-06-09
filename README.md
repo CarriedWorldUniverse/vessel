@@ -50,6 +50,10 @@ See [`docs/mac-reference-build.md`](docs/mac-reference-build.md) for details.
 
 The reference build supports natural aspect targeting for speech. Say `Hey shadow, can you get me the result for today?` and Vessel routes it through Nexus `aspect.say`, focuses Shadow, and speaks Shadow's response when Nexus delivers it. Background messages from other aspects are shown as notices rather than spoken over the active target. The visible stage defaults to `shadow`, `anvil`, and `plumb`; override with `VESSEL_VISIBLE_ASPECTS`. VoxCPM is the configured TTS path for the dmonextreme reference setup, with macOS `say` as the fallback.
 
+## iOS companion
+
+The iPhone path is a native SwiftUI companion client, not an Electron/Tauri port. It uses Apple Speech, `URLSessionWebSocketTask`, Keychain-backed settings, and the Nexus reference connector to provide the same "hey aspect" voice flow on mobile. See [`docs/2026-06-09-vessel-ios-mvp-spec.md`](docs/2026-06-09-vessel-ios-mvp-spec.md).
+
 ## Family
 
 Sibling projects under `CarriedWorldUniverse`:
