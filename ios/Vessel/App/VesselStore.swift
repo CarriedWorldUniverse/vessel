@@ -199,7 +199,7 @@ final class VesselStore: ObservableObject {
         var next = inbox.remove(at: nextIndex)
         next.spoken = true
         activeResponse = next
-        speaker.speak(next.speech)
+        speaker.speak(next.speech, aspectId: next.aspectId)
     }
 
     private func loadPreviewRosterIfEmpty() {
