@@ -42,7 +42,27 @@ final class VesselStore: ObservableObject {
         await connect()
     }
 
+    func handleScenePhase(_ phase: ScenePhase) async {
+        switch phase {
+        case .active:
+            UIApplication.shared.isIdleTimerDisabled = true
+            await reconnectAfterFocus()
+        case .inactive:
+            if isListening {
+                stopListening()
+            }
+        case .background:
+            UIApplication.shared.isIdleTimerDisabled = false
+            if isListening {
+                stopListening()
+            }
+        @unknown default:
+            break
+        }
+    }
+
     func connect() async {
+        guard connectionState != .connecting else { return }
         connectionState = .connecting
         do {
             try await nexus.connect(config: config) { [weak self] event in
@@ -163,6 +183,11 @@ final class VesselStore: ObservableObject {
                 spoken: true
             )
         }
+    }
+
+    private func reconnectAfterFocus() async {
+        guard didAutoConnect else { return }
+        await connect()
     }
 
     private func handleNexusEvent(_ event: NexusEvent) {
