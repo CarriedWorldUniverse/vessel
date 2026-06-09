@@ -24,20 +24,23 @@ final class SpeechSpeaker: NSObject, AVSpeechSynthesizerDelegate, AVAudioPlayerD
         let trimmed = Self.shapeForSpeech(text)
         guard !trimmed.isEmpty else { return }
         stop()
-        configureAudioSession(config.audioOutputPolicy)
 
         guard config.ttsProvider != .apple else {
+            configureAppleAudioSession(config.audioOutputPolicy)
             speakApple(trimmed, aspectId: aspectId)
             return
         }
 
+        configureRemoteAudioSession(config.audioOutputPolicy)
         remoteTask = Task { [weak self] in
             guard let self else { return }
             do {
-                let data = try await Self.remoteSpeechAudio(text: trimmed, aspectId: aspectId, config: config)
+                let spokenText = await Self.rewriteForSpeechIfNeeded(trimmed, aspectId: aspectId, config: config)
+                let data = try await Self.remoteSpeechAudio(text: spokenText, aspectId: aspectId, config: config)
                 try self.playRemoteAudio(data)
             } catch {
                 guard !Task.isCancelled else { return }
+                self.configureAppleAudioSession(config.audioOutputPolicy)
                 self.speakApple(trimmed, aspectId: aspectId)
             }
         }
@@ -64,6 +67,8 @@ final class SpeechSpeaker: NSObject, AVSpeechSynthesizerDelegate, AVAudioPlayerD
     private func playRemoteAudio(_ data: Data) throws {
         let player = try AVAudioPlayer(data: data)
         player.delegate = self
+        player.pan = 0
+        player.volume = 1
         player.prepareToPlay()
         audioPlayer = player
         player.play()
@@ -75,7 +80,33 @@ final class SpeechSpeaker: NSObject, AVSpeechSynthesizerDelegate, AVAudioPlayerD
         }
     }
 
-    private func configureAudioSession(_ policy: AudioOutputPolicy) {
+    private func configureRemoteAudioSession(_ policy: AudioOutputPolicy) {
+        #if os(iOS)
+        do {
+            let session = AVAudioSession.sharedInstance()
+            if policy == .speaker {
+                try session.setCategory(
+                    .playAndRecord,
+                    mode: .default,
+                    options: [.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP]
+                )
+                try session.overrideOutputAudioPort(.speaker)
+            } else {
+                try session.setCategory(
+                    .playback,
+                    mode: .default,
+                    options: [.allowBluetoothA2DP]
+                )
+                try session.overrideOutputAudioPort(.none)
+            }
+            try session.setActive(true)
+        } catch {
+            // Remote TTS can still continue with the system default audio route.
+        }
+        #endif
+    }
+
+    private func configureAppleAudioSession(_ policy: AudioOutputPolicy) {
         #if os(iOS)
         do {
             let session = AVAudioSession.sharedInstance()
@@ -212,7 +243,7 @@ final class SpeechSpeaker: NSObject, AVSpeechSynthesizerDelegate, AVAudioPlayerD
 
     private static func remoteSpeechAudio(text: String, aspectId: String, config: VesselConfig) async throws -> Data {
         let profile = profile(for: aspectId)
-        let input = "(\(profile.prompt), avoid robotic word-by-word delivery, use natural pauses)\(text)"
+        let input = "(\(profile.prompt), avoid robotic word-by-word delivery, use natural pauses)\(sanitizeForTTSMarkup(text))"
         var url = config.ttsBaseURL
         if url.path.hasSuffix("/") {
             url.deleteLastPathComponent()
@@ -238,10 +269,85 @@ final class SpeechSpeaker: NSObject, AVSpeechSynthesizerDelegate, AVAudioPlayerD
         return data
     }
 
+    private static func rewriteForSpeechIfNeeded(_ text: String, aspectId: String, config: VesselConfig) async -> String {
+        guard config.speechRewriteEnabled else { return text }
+
+        do {
+            let rewritten = try await remoteSpeechRewrite(text: text, aspectId: aspectId, config: config)
+            let clean = shapeForSpeech(rewritten)
+            return clean.isEmpty ? text : clean
+        } catch {
+            return text
+        }
+    }
+
+    private static func remoteSpeechRewrite(text: String, aspectId: String, config: VesselConfig) async throws -> String {
+        var url = config.speechRewriteBaseURL
+        if url.path.hasSuffix("/") {
+            url.deleteLastPathComponent()
+        }
+        url.appendPathComponent("chat")
+        url.appendPathComponent("completions")
+
+        let prompt = [
+            "Convert this assistant response into natural spoken language for text-to-speech.",
+            "Keep the meaning, but remove markdown, code formatting, quotes, URLs, bullets, labels, and technical scaffolding.",
+            "Speak like a concise human operator. Use complete sentences and natural transitions.",
+            "Do not mention that you rewrote or summarized it.",
+            "Keep it under 70 words unless the content truly needs more.",
+            "Target speaker: \(aspectId).",
+            "",
+            text
+        ].joined(separator: "\n")
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 8
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: [
+            "model": config.speechRewriteModel.isEmpty
+                ? "hf.co/google/gemma-4-12B-it-qat-q4_0-gguf:latest"
+                : config.speechRewriteModel,
+            "messages": [
+                [
+                    "role": "system",
+                    "content": "You prepare assistant responses for natural speech. Do not reason out loud. Return only the spoken text. No markdown. No quotation marks."
+                ],
+                [
+                    "role": "user",
+                    "content": prompt
+                ]
+            ],
+            "temperature": 0.2,
+            "max_tokens": 320
+        ])
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+            throw SpeechSpeakerError.remoteRewriteFailed
+        }
+        guard
+            let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let choices = json["choices"] as? [[String: Any]],
+            let first = choices.first,
+            let message = first["message"] as? [String: Any],
+            let content = message["content"] as? String
+        else {
+            throw SpeechSpeakerError.remoteRewriteFailed
+        }
+        let clean = sanitizeForTTSMarkup(content)
+        guard !clean.isEmpty else {
+            throw SpeechSpeakerError.remoteRewriteFailed
+        }
+        return clean
+    }
+
     private static func shapeForSpeech(_ text: String) -> String {
         var clean = text
             .replacingOccurrences(of: #"```[\s\S]*?```"#, with: "I have included code in the details panel.", options: .regularExpression)
             .replacingOccurrences(of: #"`([^`]+)`"#, with: "$1", options: .regularExpression)
+            .replacingOccurrences(of: #"[`"“”]"#, with: "", options: .regularExpression)
+            .replacingOccurrences(of: #"['‘’]"#, with: "", options: .regularExpression)
             .replacingOccurrences(of: #"https?://\S+"#, with: "link", options: .regularExpression)
             .replacingOccurrences(of: #"(?m)^\s*[-*]\s+"#, with: "", options: .regularExpression)
             .replacingOccurrences(of: #"(?m)^\s*\d+\.\s+"#, with: "", options: .regularExpression)
@@ -265,8 +371,18 @@ final class SpeechSpeaker: NSObject, AVSpeechSynthesizerDelegate, AVAudioPlayerD
 
         return clean
     }
+
+    private static func sanitizeForTTSMarkup(_ text: String) -> String {
+        text
+            .replacingOccurrences(of: #"[()]"#, with: "", options: .regularExpression)
+            .replacingOccurrences(of: #"[`"“”]"#, with: "", options: .regularExpression)
+            .replacingOccurrences(of: #"['‘’]"#, with: "", options: .regularExpression)
+            .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 }
 
 enum SpeechSpeakerError: Error {
     case remoteTTSFailed
+    case remoteRewriteFailed
 }

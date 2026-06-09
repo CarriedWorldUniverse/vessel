@@ -134,6 +134,9 @@ private struct SettingsPanel: View {
     @State private var ttsProvider = TTSProvider.automatic
     @State private var ttsBaseURLString = ""
     @State private var ttsModel = ""
+    @State private var speechRewriteEnabled = true
+    @State private var speechRewriteBaseURLString = ""
+    @State private var speechRewriteModel = ""
     @State private var configError: String?
 
     var body: some View {
@@ -191,6 +194,17 @@ private struct SettingsPanel: View {
                     TextField("TTS model", text: $ttsModel)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
+
+                    Toggle("Rewrite for speech", isOn: $speechRewriteEnabled)
+
+                    TextField("Rewrite URL", text: $speechRewriteBaseURLString)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .keyboardType(.URL)
+
+                    TextField("Rewrite model", text: $speechRewriteModel)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
                 }
 
                 Section("Aspect") {
@@ -221,6 +235,9 @@ private struct SettingsPanel: View {
                 ttsProvider = store.config.ttsProvider
                 ttsBaseURLString = store.config.ttsBaseURL.absoluteString
                 ttsModel = store.config.ttsModel
+                speechRewriteEnabled = store.config.speechRewriteEnabled
+                speechRewriteBaseURLString = store.config.speechRewriteBaseURL.absoluteString
+                speechRewriteModel = store.config.speechRewriteModel
             }
         }
     }
@@ -246,9 +263,12 @@ private struct SettingsPanel: View {
             audioOutputPolicy: audioOutputPolicy,
             ttsProvider: ttsProvider,
             ttsBaseURLString: ttsBaseURLString,
-            ttsModel: ttsModel
+            ttsModel: ttsModel,
+            speechRewriteEnabled: speechRewriteEnabled,
+            speechRewriteBaseURLString: speechRewriteBaseURLString,
+            speechRewriteModel: speechRewriteModel
         ) else {
-            configError = "Enter valid Nexus and TTS URLs."
+            configError = "Enter valid Nexus, TTS, and rewrite URLs."
             return
         }
 

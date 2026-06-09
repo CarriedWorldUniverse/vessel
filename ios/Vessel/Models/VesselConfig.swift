@@ -24,6 +24,9 @@ struct VesselConfig: Equatable {
     var ttsProvider: TTSProvider
     var ttsBaseURL: URL
     var ttsModel: String
+    var speechRewriteEnabled: Bool
+    var speechRewriteBaseURL: URL
+    var speechRewriteModel: String
 
     static let `default` = VesselConfig(
         nexusURL: URL(string: "wss://nexus.tail41686e.ts.net:7888/connect")!,
@@ -32,6 +35,9 @@ struct VesselConfig: Equatable {
         audioOutputPolicy: .automatic,
         ttsProvider: .automatic,
         ttsBaseURL: URL(string: "http://dmonextreme.tail41686e.ts.net:30435/v1")!,
-        ttsModel: "openbmb/VoxCPM2"
+        ttsModel: "openbmb/VoxCPM2",
+        speechRewriteEnabled: true,
+        speechRewriteBaseURL: URL(string: "http://dmonextreme.tail41686e.ts.net:30434/v1")!,
+        speechRewriteModel: "hf.co/google/gemma-4-12B-it-qat-q4_0-gguf:latest"
     )
 }

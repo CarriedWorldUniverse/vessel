@@ -88,11 +88,15 @@ final class VesselStore: ObservableObject {
         audioOutputPolicy: AudioOutputPolicy,
         ttsProvider: TTSProvider,
         ttsBaseURLString: String,
-        ttsModel: String
+        ttsModel: String,
+        speechRewriteEnabled: Bool,
+        speechRewriteBaseURLString: String,
+        speechRewriteModel: String
     ) -> Bool {
         guard
             let url = URL(string: nexusURLString.trimmingCharacters(in: .whitespacesAndNewlines)),
-            let ttsBaseURL = URL(string: ttsBaseURLString.trimmingCharacters(in: .whitespacesAndNewlines))
+            let ttsBaseURL = URL(string: ttsBaseURLString.trimmingCharacters(in: .whitespacesAndNewlines)),
+            let speechRewriteBaseURL = URL(string: speechRewriteBaseURLString.trimmingCharacters(in: .whitespacesAndNewlines))
         else {
             return false
         }
@@ -103,7 +107,10 @@ final class VesselStore: ObservableObject {
             audioOutputPolicy: audioOutputPolicy,
             ttsProvider: ttsProvider,
             ttsBaseURL: ttsBaseURL,
-            ttsModel: ttsModel.trimmingCharacters(in: .whitespacesAndNewlines)
+            ttsModel: ttsModel.trimmingCharacters(in: .whitespacesAndNewlines),
+            speechRewriteEnabled: speechRewriteEnabled,
+            speechRewriteBaseURL: speechRewriteBaseURL,
+            speechRewriteModel: speechRewriteModel.trimmingCharacters(in: .whitespacesAndNewlines)
         )
         return true
     }
