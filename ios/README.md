@@ -15,15 +15,18 @@ Once Xcode is installed/selected:
 sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 ```
 
-Create an iOS SwiftUI app project around the files in `Vessel/`, enable automatic signing with the operator's Apple Developer team, and set the bundle identifier to:
+Generate the project:
+
+```bash
+cd ios
+xcodegen generate
+open Vessel.xcodeproj
+```
+
+Then enable automatic signing with the operator's Apple Developer team. The bundle identifier is:
 
 ```text
 universe.carriedworld.vessel
 ```
-
-Required `Info.plist` usage strings:
-
-- `NSMicrophoneUsageDescription`
-- `NSSpeechRecognitionUsageDescription`
 
 See `../docs/2026-06-09-vessel-ios-mvp-spec.md` for the MVP scope.

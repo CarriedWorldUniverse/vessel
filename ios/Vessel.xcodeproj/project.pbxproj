@@ -1,0 +1,400 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		07F2AD02812F3A8503C341B4 /* TargetResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = D924949DC2894250D6638E60 /* TargetResolver.swift */; };
+		17B6C117DD26058A3B58E2CA /* Aspect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60106B3072E6F54856BCA5E9 /* Aspect.swift */; };
+		33FB26FF98B0EAE75C0E4E5B /* RoomView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60F0AB594DD7D84CC448B705 /* RoomView.swift */; };
+		35A1BBD6C53044E60A4D4D48 /* VesselApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B3FABB1B539E4968D7BD389 /* VesselApp.swift */; };
+		4119CB07D81FB89DAA7574D7 /* SpeechRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EDCE91232B8CB26C766EF5F /* SpeechRecognizer.swift */; };
+		94940D8152A261E5F13BF779 /* VesselStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E45D03E51B7A33C1F15ABF5 /* VesselStore.swift */; };
+		B4C20C58A259220508A97BFC /* ResponseItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70BD8FC636058053EAADE99C /* ResponseItem.swift */; };
+		B7872A0648E71F9ADE6C7859 /* VesselConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 151B0AF52780EDBDF3CAD747 /* VesselConfig.swift */; };
+		DF48B0721D0414F953C970C4 /* SpeechSpeaker.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEAA01F2B61F877E1BA97F2C /* SpeechSpeaker.swift */; };
+		E065F669D61C77D3A3BD1347 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D9672A2DF1DC91783139D9C3 /* Assets.xcassets */; };
+		FBB37364FB235661005E59ED /* NexusClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D416CE6F4FA9426E0316705 /* NexusClient.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		151B0AF52780EDBDF3CAD747 /* VesselConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VesselConfig.swift; sourceTree = "<group>"; };
+		4B3FABB1B539E4968D7BD389 /* VesselApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VesselApp.swift; sourceTree = "<group>"; };
+		5CE01378F52A25FF1E0ADE2A /* Vessel.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Vessel.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		60106B3072E6F54856BCA5E9 /* Aspect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Aspect.swift; sourceTree = "<group>"; };
+		60F0AB594DD7D84CC448B705 /* RoomView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoomView.swift; sourceTree = "<group>"; };
+		70BD8FC636058053EAADE99C /* ResponseItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseItem.swift; sourceTree = "<group>"; };
+		8D416CE6F4FA9426E0316705 /* NexusClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NexusClient.swift; sourceTree = "<group>"; };
+		8EDCE91232B8CB26C766EF5F /* SpeechRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechRecognizer.swift; sourceTree = "<group>"; };
+		9E45D03E51B7A33C1F15ABF5 /* VesselStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VesselStore.swift; sourceTree = "<group>"; };
+		D5E15486FDE39362049AB905 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		D924949DC2894250D6638E60 /* TargetResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TargetResolver.swift; sourceTree = "<group>"; };
+		D9672A2DF1DC91783139D9C3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		DEAA01F2B61F877E1BA97F2C /* SpeechSpeaker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechSpeaker.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		03BA69888C6A8CCBE56BF004 = {
+			isa = PBXGroup;
+			children = (
+				A9B17C137638A34421DB09E8 /* Vessel */,
+				3928185B625E1CDDA0CB76A5 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		3928185B625E1CDDA0CB76A5 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				5CE01378F52A25FF1E0ADE2A /* Vessel.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		3D823DAFDA29904B2DCA2297 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				4B3FABB1B539E4968D7BD389 /* VesselApp.swift */,
+				9E45D03E51B7A33C1F15ABF5 /* VesselStore.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		5FE8A95FAA752C2134474325 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				60F0AB594DD7D84CC448B705 /* RoomView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		7139A01A32D9C9EA4C0C9FE6 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				60106B3072E6F54856BCA5E9 /* Aspect.swift */,
+				70BD8FC636058053EAADE99C /* ResponseItem.swift */,
+				151B0AF52780EDBDF3CAD747 /* VesselConfig.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		8D01C34E126D76B8D54A746B /* Nexus */ = {
+			isa = PBXGroup;
+			children = (
+				8D416CE6F4FA9426E0316705 /* NexusClient.swift */,
+				D924949DC2894250D6638E60 /* TargetResolver.swift */,
+			);
+			path = Nexus;
+			sourceTree = "<group>";
+		};
+		A9B17C137638A34421DB09E8 /* Vessel */ = {
+			isa = PBXGroup;
+			children = (
+				3D823DAFDA29904B2DCA2297 /* App */,
+				C8430ECE89458567D973B00C /* Audio */,
+				7139A01A32D9C9EA4C0C9FE6 /* Models */,
+				8D01C34E126D76B8D54A746B /* Nexus */,
+				FFF471E78136B20A1DD9B66D /* Resources */,
+				F6595D4F9E65450BD18191ED /* Speech */,
+				5FE8A95FAA752C2134474325 /* Views */,
+			);
+			path = Vessel;
+			sourceTree = "<group>";
+		};
+		C8430ECE89458567D973B00C /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				DEAA01F2B61F877E1BA97F2C /* SpeechSpeaker.swift */,
+			);
+			path = Audio;
+			sourceTree = "<group>";
+		};
+		F6595D4F9E65450BD18191ED /* Speech */ = {
+			isa = PBXGroup;
+			children = (
+				8EDCE91232B8CB26C766EF5F /* SpeechRecognizer.swift */,
+			);
+			path = Speech;
+			sourceTree = "<group>";
+		};
+		FFF471E78136B20A1DD9B66D /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				D9672A2DF1DC91783139D9C3 /* Assets.xcassets */,
+				D5E15486FDE39362049AB905 /* Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		B6DD026518C19B0A1E44BC2B /* Vessel */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 664BA3258EC2A56DEE7D60B0 /* Build configuration list for PBXNativeTarget "Vessel" */;
+			buildPhases = (
+				A7991FD6F19325CB029869E3 /* Sources */,
+				C744665EDD586FBF2A97389B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Vessel;
+			packageProductDependencies = (
+			);
+			productName = Vessel;
+			productReference = 5CE01378F52A25FF1E0ADE2A /* Vessel.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		67FA9F8F8831C654281BD08E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					B6DD026518C19B0A1E44BC2B = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = B6DE1C08F153EC7001FEA058 /* Build configuration list for PBXProject "Vessel" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 03BA69888C6A8CCBE56BF004;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 3928185B625E1CDDA0CB76A5 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B6DD026518C19B0A1E44BC2B /* Vessel */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		C744665EDD586FBF2A97389B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E065F669D61C77D3A3BD1347 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A7991FD6F19325CB029869E3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				17B6C117DD26058A3B58E2CA /* Aspect.swift in Sources */,
+				FBB37364FB235661005E59ED /* NexusClient.swift in Sources */,
+				B4C20C58A259220508A97BFC /* ResponseItem.swift in Sources */,
+				33FB26FF98B0EAE75C0E4E5B /* RoomView.swift in Sources */,
+				4119CB07D81FB89DAA7574D7 /* SpeechRecognizer.swift in Sources */,
+				DF48B0721D0414F953C970C4 /* SpeechSpeaker.swift in Sources */,
+				07F2AD02812F3A8503C341B4 /* TargetResolver.swift in Sources */,
+				35A1BBD6C53044E60A4D4D48 /* VesselApp.swift in Sources */,
+				B7872A0648E71F9ADE6C7859 /* VesselConfig.swift in Sources */,
+				94940D8152A261E5F13BF779 /* VesselStore.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		5C7595E2376CB62462A57998 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		9739CEAD5164695CB6C682D7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = Vessel/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = universe.carriedworld.vessel;
+				PRODUCT_NAME = Vessel;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		F1A045FBE13158FE95DAD1F3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = Vessel/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = universe.carriedworld.vessel;
+				PRODUCT_NAME = Vessel;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		F5C1C725EB4B95AD78703E05 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		664BA3258EC2A56DEE7D60B0 /* Build configuration list for PBXNativeTarget "Vessel" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F1A045FBE13158FE95DAD1F3 /* Debug */,
+				9739CEAD5164695CB6C682D7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B6DE1C08F153EC7001FEA058 /* Build configuration list for PBXProject "Vessel" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F5C1C725EB4B95AD78703E05 /* Debug */,
+				5C7595E2376CB62462A57998 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 67FA9F8F8831C654281BD08E /* Project object */;
+}
