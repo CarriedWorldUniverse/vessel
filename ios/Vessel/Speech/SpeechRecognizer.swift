@@ -43,6 +43,10 @@ final class SpeechRecognizer {
 
         let input = audioEngine.inputNode
         let format = input.outputFormat(forBus: 0)
+        guard format.sampleRate > 0, format.channelCount > 0 else {
+            onError(SpeechRecognizerError.microphoneUnavailable)
+            return
+        }
 
         input.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in
             request.append(buffer)
@@ -86,4 +90,16 @@ final class SpeechRecognizer {
 
 enum SpeechRecognizerError: Error {
     case notAuthorized
+    case microphoneUnavailable
+}
+
+extension SpeechRecognizerError: LocalizedError {
+    var errorDescription: String? {
+        switch self {
+        case .notAuthorized:
+            return "Speech recognition is not authorized."
+        case .microphoneUnavailable:
+            return "Microphone input is unavailable in this simulator."
+        }
+    }
 }
