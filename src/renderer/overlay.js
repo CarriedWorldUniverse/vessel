@@ -736,7 +736,7 @@ async function loadDefaultsAndConnect() {
     .map(name => name.trim().toLowerCase())
     .filter(Boolean);
   setState({ visibleAspects });
-  const excludedAspects = String(defaults?.excludedAspects || 'dispatch,dispatch-controller,dispatch_controller,controller,operator')
+  const excludedAspects = String(defaults?.excludedAspects || 'dispatch,dispatch-controller,dispatch_controller,controller,operator,observer')
     .split(',')
     .map(name => name.trim().toLowerCase())
     .filter(Boolean);
