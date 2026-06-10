@@ -2,6 +2,7 @@
 // Color and name are the only things hardcoded here; all other identity
 // (VRM path, voice, metadata) comes from the adapter layer later.
 export const ASPECTS = [
+  { name: 'shadow', color: 0x6d5dfc },
   { name: 'forge',  color: 0xff6b35 },
   { name: 'wren',   color: 0x9b6dff },
   { name: 'harrow', color: 0x4ecdc4 },

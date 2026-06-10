@@ -16,7 +16,7 @@ export const stageState = {
   rosterLoaded: false,
 
   visibleAspects: [],
-  excludedAspects: ['dispatch', 'dispatch-controller', 'dispatch_controller', 'controller', 'operator'],
+  excludedAspects: ['dispatch', 'dispatch-controller', 'dispatch_controller', 'controller', 'operator', 'observer'],
   mutedAspects: [],
 
   // Which aspect is currently speaking (null = nobody)

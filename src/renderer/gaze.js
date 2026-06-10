@@ -3,8 +3,8 @@ import { stageState, onStateChange } from './state.js';
 
 // ── Gaze system ───────────────────────────────────────────────────────────────
 //
-// For sphere-tier avatars, gaze is implemented as a subtle positional offset —
-// the sphere drifts slightly toward whatever it's attending to.
+// For slime-tier avatars, gaze is implemented as a subtle positional offset —
+// the actor drifts slightly toward whatever it's attending to.
 //
 // Gaze targets (priority order):
 //   1. addressed — this sphere was directly addressed; brief snap toward camera
@@ -118,11 +118,16 @@ export function updateGaze(dt) {
     // Lerp current offset toward target
     g.currentOffset.lerp(g.targetOffset, dt * GAZE_LERP_SPEED);
 
-    // Apply offset to mesh position (relative to seat position)
+    // Apply offset to actor position (relative to seat position)
     s.mesh.position.set(
       s.pos.x + g.currentOffset.x,
       s.mesh.position.y,  // preserve breathing Y from scene.js
       s.pos.z + g.currentOffset.z,
     );
+
+    if (s.eyes) {
+      s.eyes.position.x = g.currentOffset.x * 0.45;
+      s.eyes.position.z = 0.012 + g.currentOffset.z * 0.35;
+    }
   });
 }

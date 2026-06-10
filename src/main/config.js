@@ -10,7 +10,7 @@ const DEFAULT_CONFIG = {
   },
   stage: {
     visibleAspects: [],
-    excludedAspects: ['dispatch', 'dispatch-controller', 'dispatch_controller', 'controller', 'operator'],
+    excludedAspects: ['dispatch', 'dispatch-controller', 'dispatch_controller', 'controller', 'operator', 'observer'],
   },
   tts: {
     engine: 'voxcpm',
